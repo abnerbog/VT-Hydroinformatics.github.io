@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 12 Low Flow Analyses | Hydroinformatics at VT</title>
+  <meta name="description" content="This bookdown contains notes and exercises for a course in hydroinformatics at Virginia Tech." />
+  <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 12 Low Flow Analyses | Hydroinformatics at VT" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="This bookdown contains notes and exercises for a course in hydroinformatics at Virginia Tech." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 12 Low Flow Analyses | Hydroinformatics at VT" />
+  
+  <meta name="twitter:description" content="This bookdown contains notes and exercises for a course in hydroinformatics at Virginia Tech." />
+  
+
+<meta name="author" content="JP Gannon" />
+
+
+<meta name="date" content="2021-02-24" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="lfas.html"/>
+<link rel="next" href="floods.html"/>
+<script src="libs/header-attrs-2.4.6/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Hydroinformatics</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#how-to-use-these-materials"><i class="fa fa-check"></i><b>1.1</b> How to use these materials</a>
+<ul>
+<li class="chapter" data-level="1.1.1" data-path="index.html"><a href="index.html#table-of-contents"><i class="fa fa-check"></i><b>1.1.1</b> Table of contents:</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="Plotting.html"><a href="Plotting.html"><i class="fa fa-check"></i><b>2</b> Intro to Plotting</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="Plotting.html"><a href="Plotting.html#download-and-install-tidyverse-library"><i class="fa fa-check"></i><b>2.1</b> Download and install tidyverse library</a></li>
+<li class="chapter" data-level="2.2" data-path="Plotting.html"><a href="Plotting.html#reading-data"><i class="fa fa-check"></i><b>2.2</b> Reading data</a></li>
+<li class="chapter" data-level="2.3" data-path="Plotting.html"><a href="Plotting.html#our-first-ggplot"><i class="fa fa-check"></i><b>2.3</b> Our first ggplot</a></li>
+<li class="chapter" data-level="2.4" data-path="Plotting.html"><a href="Plotting.html#change-point-type"><i class="fa fa-check"></i><b>2.4</b> Change point type</a></li>
+<li class="chapter" data-level="2.5" data-path="Plotting.html"><a href="Plotting.html#set-colors"><i class="fa fa-check"></i><b>2.5</b> Set colors</a></li>
+<li class="chapter" data-level="2.6" data-path="Plotting.html"><a href="Plotting.html#controlling-color-with-a-third-variable-and-other-functions"><i class="fa fa-check"></i><b>2.6</b> Controlling color with a third variable and other functions</a></li>
+<li class="chapter" data-level="2.7" data-path="Plotting.html"><a href="Plotting.html#plotting-multiple-groups"><i class="fa fa-check"></i><b>2.7</b> Plotting multiple groups</a></li>
+<li class="chapter" data-level="2.8" data-path="Plotting.html"><a href="Plotting.html#facets"><i class="fa fa-check"></i><b>2.8</b> Facets</a></li>
+<li class="chapter" data-level="2.9" data-path="Plotting.html"><a href="Plotting.html#two-variable-faceting"><i class="fa fa-check"></i><b>2.9</b> Two variable faceting</a></li>
+<li class="chapter" data-level="2.10" data-path="Plotting.html"><a href="Plotting.html#boxplots"><i class="fa fa-check"></i><b>2.10</b> Boxplots</a></li>
+<li class="chapter" data-level="2.11" data-path="Plotting.html"><a href="Plotting.html#more-about-color-size-etc"><i class="fa fa-check"></i><b>2.11</b> More about color, size, etc</a></li>
+<li class="chapter" data-level="2.12" data-path="Plotting.html"><a href="Plotting.html#multiple-geoms"><i class="fa fa-check"></i><b>2.12</b> Multiple geoms</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="Programming.html"><a href="Programming.html"><i class="fa fa-check"></i><b>3</b> R Tidyverse Programming Basics</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="Programming.html"><a href="Programming.html#introduction-1"><i class="fa fa-check"></i><b>3.1</b> Introduction</a></li>
+<li class="chapter" data-level="3.2" data-path="Programming.html"><a href="Programming.html#you-can-use-r-as-a-calculator"><i class="fa fa-check"></i><b>3.2</b> You can use R as a calculator</a></li>
+<li class="chapter" data-level="3.3" data-path="Programming.html"><a href="Programming.html#you-can-create-new-objects-using--"><i class="fa fa-check"></i><b>3.3</b> You can create new objects using &lt;-</a></li>
+<li class="chapter" data-level="3.4" data-path="Programming.html"><a href="Programming.html#using-functions"><i class="fa fa-check"></i><b>3.4</b> Using functions</a></li>
+<li class="chapter" data-level="3.5" data-path="Programming.html"><a href="Programming.html#read-in-some-data."><i class="fa fa-check"></i><b>3.5</b> Read in some data.</a></li>
+<li class="chapter" data-level="3.6" data-path="Programming.html"><a href="Programming.html#wait-hold-up.-what-is-a-tibble"><i class="fa fa-check"></i><b>3.6</b> Wait, hold up. What is a tibble?</a></li>
+<li class="chapter" data-level="3.7" data-path="Programming.html"><a href="Programming.html#data-wrangling-in-dplyr"><i class="fa fa-check"></i><b>3.7</b> Data wrangling in dplyr</a></li>
+<li class="chapter" data-level="3.8" data-path="Programming.html"><a href="Programming.html#filter"><i class="fa fa-check"></i><b>3.8</b> Filter</a>
+<ul>
+<li class="chapter" data-level="3.8.1" data-path="Programming.html"><a href="Programming.html#multiple-conditions"><i class="fa fa-check"></i><b>3.8.1</b> Multiple conditions</a></li>
+</ul></li>
+<li class="chapter" data-level="3.9" data-path="Programming.html"><a href="Programming.html#arrange"><i class="fa fa-check"></i><b>3.9</b> Arrange</a></li>
+<li class="chapter" data-level="3.10" data-path="Programming.html"><a href="Programming.html#select"><i class="fa fa-check"></i><b>3.10</b> Select</a></li>
+<li class="chapter" data-level="3.11" data-path="Programming.html"><a href="Programming.html#mutate"><i class="fa fa-check"></i><b>3.11</b> Mutate</a></li>
+<li class="chapter" data-level="3.12" data-path="Programming.html"><a href="Programming.html#summarize"><i class="fa fa-check"></i><b>3.12</b> Summarize</a></li>
+<li class="chapter" data-level="3.13" data-path="Programming.html"><a href="Programming.html#multiple-operations-with-pipes"><i class="fa fa-check"></i><b>3.13</b> Multiple operations with pipes</a>
+<ul>
+<li class="chapter" data-level="3.13.1" data-path="Programming.html"><a href="Programming.html#lets-say-we-want-to-tell-r-to-make-a-pbj-sandwich-by-using-the-pbbread-jbread-and-joinslices-functions-and-the-data-ingredients.-if-we-do-this-saving-each-step-if-would-look-like-this"><i class="fa fa-check"></i><b>3.13.1</b> Let’s say we want to tell R to make a PB&amp;J sandwich by using the pbbread(), jbread(), and joinslices() functions and the data “ingredients.” If we do this saving each step if would look like this:</a></li>
+<li class="chapter" data-level="3.13.2" data-path="Programming.html"><a href="Programming.html#if-we-nest-the-functions-together-we-get-this"><i class="fa fa-check"></i><b>3.13.2</b> If we nest the functions together we get this</a></li>
+<li class="chapter" data-level="3.13.3" data-path="Programming.html"><a href="Programming.html#using-the-pipe-it-would-look-like-this"><i class="fa fa-check"></i><b>3.13.3</b> Using the pipe it would look like this</a></li>
+<li class="chapter" data-level="3.13.4" data-path="Programming.html"><a href="Programming.html#when-you-use-the-pipe-it-basically-takes-whatever-came-out-of-the-first-function-and-puts-it-into-the-data-argument-for-the-next-one"><i class="fa fa-check"></i><b>3.13.4</b> When you use the pipe, it basically takes whatever came out of the first function and puts it into the data argument for the next one</a></li>
+</ul></li>
+<li class="chapter" data-level="3.14" data-path="Programming.html"><a href="Programming.html#save-your-results-to-a-new-tibble"><i class="fa fa-check"></i><b>3.14</b> Save your results to a new tibble</a></li>
+<li class="chapter" data-level="3.15" data-path="Programming.html"><a href="Programming.html#what-about-nas"><i class="fa fa-check"></i><b>3.15</b> What about NAs?</a></li>
+<li class="chapter" data-level="3.16" data-path="Programming.html"><a href="Programming.html#what-are-some-things-you-think-ill-ask-you-to-do-for-the-activity-next-class"><i class="fa fa-check"></i><b>3.16</b> What are some things you think I’ll ask you to do for the activity next class?</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="introactivity.html"><a href="introactivity.html"><i class="fa fa-check"></i><b>4</b> Intro Skills Activity</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="introactivity.html"><a href="introactivity.html#problem-1"><i class="fa fa-check"></i><b>4.1</b> Problem 1</a></li>
+<li class="chapter" data-level="4.2" data-path="introactivity.html"><a href="introactivity.html#problem-2"><i class="fa fa-check"></i><b>4.2</b> Problem 2</a></li>
+<li class="chapter" data-level="4.3" data-path="introactivity.html"><a href="introactivity.html#problem-3"><i class="fa fa-check"></i><b>4.3</b> Problem 3</a></li>
+<li class="chapter" data-level="4.4" data-path="introactivity.html"><a href="introactivity.html#problem-4"><i class="fa fa-check"></i><b>4.4</b> Problem 4</a></li>
+<li class="chapter" data-level="4.5" data-path="introactivity.html"><a href="introactivity.html#problem-5"><i class="fa fa-check"></i><b>4.5</b> Problem 5</a></li>
+<li class="chapter" data-level="4.6" data-path="introactivity.html"><a href="introactivity.html#problem-6"><i class="fa fa-check"></i><b>4.6</b> Problem 6</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="stats.html"><a href="stats.html"><i class="fa fa-check"></i><b>5</b> Introduction to Basic Statistics</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="stats.html"><a href="stats.html#reading-for-this-section-statistical-methods-in-water-resources-chapter-1"><i class="fa fa-check"></i><b>5.1</b> Reading for this section: Statistical Methods in Water Resources: Chapter 1</a></li>
+<li class="chapter" data-level="5.2" data-path="stats.html"><a href="stats.html#questions-for-today"><i class="fa fa-check"></i><b>5.2</b> Questions for today:</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="stats.html"><a href="stats.html#stack-plots-to-compare-histogram-and-pdf"><i class="fa fa-check"></i><b>5.2.1</b> Stack plots to compare histogram and pdf</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="stats.html"><a href="stats.html#what-is-the-difference-between-a-sample-and-a-population."><i class="fa fa-check"></i><b>5.3</b> What is the difference between a sample and a population.</a></li>
+<li class="chapter" data-level="5.4" data-path="stats.html"><a href="stats.html#measuring-our-sample-distribution-central-tendency."><i class="fa fa-check"></i><b>5.4</b> Measuring our sample distribution: central tendency.</a>
+<ul>
+<li class="chapter" data-level="5.4.1" data-path="stats.html"><a href="stats.html#so-whats-a-weighted-average"><i class="fa fa-check"></i><b>5.4.1</b> So what’s a weighted average?</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="stats.html"><a href="stats.html#measures-of-variability"><i class="fa fa-check"></i><b>5.5</b> Measures of variability</a></li>
+<li class="chapter" data-level="5.6" data-path="stats.html"><a href="stats.html#what-is-a-normal-distribution-and-how-can-we-determine-if-we-have-one"><i class="fa fa-check"></i><b>5.6</b> What is a normal distribution and how can we determine if we have one?</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="statsactivity.html"><a href="statsactivity.html"><i class="fa fa-check"></i><b>6</b> Intro Stats Activity</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="statsactivity.html"><a href="statsactivity.html#problem-1-1"><i class="fa fa-check"></i><b>6.1</b> Problem 1</a></li>
+<li class="chapter" data-level="6.2" data-path="statsactivity.html"><a href="statsactivity.html#problem-2-1"><i class="fa fa-check"></i><b>6.2</b> Problem 2</a></li>
+<li class="chapter" data-level="6.3" data-path="statsactivity.html"><a href="statsactivity.html#problem-3-1"><i class="fa fa-check"></i><b>6.3</b> Problem 3</a></li>
+<li class="chapter" data-level="6.4" data-path="statsactivity.html"><a href="statsactivity.html#problem-4-1"><i class="fa fa-check"></i><b>6.4</b> Problem 4</a></li>
+<li class="chapter" data-level="6.5" data-path="statsactivity.html"><a href="statsactivity.html#problem-5-1"><i class="fa fa-check"></i><b>6.5</b> Problem 5</a></li>
+<li class="chapter" data-level="6.6" data-path="statsactivity.html"><a href="statsactivity.html#problem-6-1"><i class="fa fa-check"></i><b>6.6</b> Problem 6</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="getdata.html"><a href="getdata.html"><i class="fa fa-check"></i><b>7</b> Joins, Pivots, and USGS dataRetrieval</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="getdata.html"><a href="getdata.html#goals-for-today"><i class="fa fa-check"></i><b>7.1</b> Goals for today</a></li>
+<li class="chapter" data-level="7.2" data-path="getdata.html"><a href="getdata.html#exploring-what-dataretrieval-can-do."><i class="fa fa-check"></i><b>7.2</b> Exploring what dataRetrieval can do.</a></li>
+<li class="chapter" data-level="7.3" data-path="getdata.html"><a href="getdata.html#joins"><i class="fa fa-check"></i><b>7.3</b> Joins</a></li>
+<li class="chapter" data-level="7.4" data-path="getdata.html"><a href="getdata.html#join-example"><i class="fa fa-check"></i><b>7.4</b> Join example</a></li>
+<li class="chapter" data-level="7.5" data-path="getdata.html"><a href="getdata.html#finding-ids-to-download-usgs-data"><i class="fa fa-check"></i><b>7.5</b> Finding IDs to download USGS data</a></li>
+<li class="chapter" data-level="7.6" data-path="getdata.html"><a href="getdata.html#ok-lets-download-some-data"><i class="fa fa-check"></i><b>7.6</b> OK let’s download some data!</a></li>
+<li class="chapter" data-level="7.7" data-path="getdata.html"><a href="getdata.html#pivoting-wide-and-long-data"><i class="fa fa-check"></i><b>7.7</b> Pivoting: wide and long data</a></li>
+<li class="chapter" data-level="7.8" data-path="getdata.html"><a href="getdata.html#pivot-examples"><i class="fa fa-check"></i><b>7.8</b> Pivot Examples</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="joinpivotDR.html"><a href="joinpivotDR.html"><i class="fa fa-check"></i><b>8</b> ACTIVITY: Joins Pivots dataRetrieval</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="joinpivotDR.html"><a href="joinpivotDR.html#load-the-tidyverse-dataretrieval-and-patchwork-packages."><i class="fa fa-check"></i><b>8.1</b> Load the tidyverse, dataRetrieval, and patchwork packages.</a></li>
+<li class="chapter" data-level="8.2" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-1-2"><i class="fa fa-check"></i><b>8.2</b> Problem 1</a></li>
+<li class="chapter" data-level="8.3" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-2-2"><i class="fa fa-check"></i><b>8.3</b> Problem 2</a></li>
+<li class="chapter" data-level="8.4" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-3-2"><i class="fa fa-check"></i><b>8.4</b> Problem 3</a></li>
+<li class="chapter" data-level="8.5" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-4-2"><i class="fa fa-check"></i><b>8.5</b> Problem 4</a></li>
+<li class="chapter" data-level="8.6" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-5-2"><i class="fa fa-check"></i><b>8.6</b> Problem 5</a></li>
+<li class="chapter" data-level="8.7" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-6-2"><i class="fa fa-check"></i><b>8.7</b> Problem 6</a></li>
+<li class="chapter" data-level="8.8" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-7"><i class="fa fa-check"></i><b>8.8</b> Problem 7</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="Summative1.html"><a href="Summative1.html"><i class="fa fa-check"></i><b>9</b> ACTIVITY Summative 1</a>
+<ul>
+<li class="chapter" data-level="9.0.1" data-path="Summative1.html"><a href="Summative1.html#instructions"><i class="fa fa-check"></i><b>9.0.1</b> Instructions</a></li>
+<li class="chapter" data-level="9.1" data-path="Summative1.html"><a href="Summative1.html#problem-1-3"><i class="fa fa-check"></i><b>9.1</b> Problem 1</a></li>
+<li class="chapter" data-level="9.2" data-path="Summative1.html"><a href="Summative1.html#problem-2-3"><i class="fa fa-check"></i><b>9.2</b> Problem 2</a></li>
+<li class="chapter" data-level="9.3" data-path="Summative1.html"><a href="Summative1.html#problem-3-3"><i class="fa fa-check"></i><b>9.3</b> Problem 3</a></li>
+<li class="chapter" data-level="9.4" data-path="Summative1.html"><a href="Summative1.html#problem-4-3"><i class="fa fa-check"></i><b>9.4</b> Problem 4</a></li>
+<li class="chapter" data-level="9.5" data-path="Summative1.html"><a href="Summative1.html#problem-5-3"><i class="fa fa-check"></i><b>9.5</b> Problem 5</a></li>
+<li class="chapter" data-level="9.6" data-path="Summative1.html"><a href="Summative1.html#problem-6-3"><i class="fa fa-check"></i><b>9.6</b> Problem 6</a></li>
+<li class="chapter" data-level="9.7" data-path="Summative1.html"><a href="Summative1.html#problem-7-1"><i class="fa fa-check"></i><b>9.7</b> Problem 7</a></li>
+<li class="chapter" data-level="9.8" data-path="Summative1.html"><a href="Summative1.html#problem-8"><i class="fa fa-check"></i><b>9.8</b> Problem 8</a></li>
+<li class="chapter" data-level="9.9" data-path="Summative1.html"><a href="Summative1.html#problem-9"><i class="fa fa-check"></i><b>9.9</b> Problem 9</a></li>
+<li class="chapter" data-level="9.10" data-path="Summative1.html"><a href="Summative1.html#problem-10"><i class="fa fa-check"></i><b>9.10</b> Problem 10</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="fdcs.html"><a href="fdcs.html"><i class="fa fa-check"></i><b>10</b> Flow Duration Curves</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="fdcs.html"><a href="fdcs.html#get-data"><i class="fa fa-check"></i><b>10.1</b> Get data</a></li>
+<li class="chapter" data-level="10.2" data-path="fdcs.html"><a href="fdcs.html#review-describe-the-distribution"><i class="fa fa-check"></i><b>10.2</b> Review: describe the distribution</a></li>
+<li class="chapter" data-level="10.3" data-path="fdcs.html"><a href="fdcs.html#ecdfs"><i class="fa fa-check"></i><b>10.3</b> ECDFs</a></li>
+<li class="chapter" data-level="10.4" data-path="fdcs.html"><a href="fdcs.html#calculate-flow-exceedence-probabilities"><i class="fa fa-check"></i><b>10.4</b> Calculate flow exceedence probabilities</a></li>
+<li class="chapter" data-level="10.5" data-path="fdcs.html"><a href="fdcs.html#plot-a-flow-duration-curve-using-the-probabilities"><i class="fa fa-check"></i><b>10.5</b> Plot a Flow Duration Curve using the probabilities</a></li>
+<li class="chapter" data-level="10.6" data-path="fdcs.html"><a href="fdcs.html#make-an-almost-fdc-with-stat_ecdf"><i class="fa fa-check"></i><b>10.6</b> Make an almost FDC with stat_ecdf</a></li>
+<li class="chapter" data-level="10.7" data-path="fdcs.html"><a href="fdcs.html#example-use-of-an-fdc"><i class="fa fa-check"></i><b>10.7</b> Example use of an FDC</a></li>
+<li class="chapter" data-level="10.8" data-path="fdcs.html"><a href="fdcs.html#compare-to-a-boxplot-of-the-same-data"><i class="fa fa-check"></i><b>10.8</b> Compare to a boxplot of the same data</a></li>
+<li class="chapter" data-level="10.9" data-path="fdcs.html"><a href="fdcs.html#challenge-examining-flow-regime-change-at-the-grand-canyon"><i class="fa fa-check"></i><b>10.9</b> Challenge: Examining flow regime change at the Grand Canyon</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="lfas.html"><a href="lfas.html"><i class="fa fa-check"></i><b>11</b> DRAFT Low Flow Analysis</a></li>
+<li class="chapter" data-level="12" data-path="low-flow-analyses.html"><a href="low-flow-analyses.html"><i class="fa fa-check"></i><b>12</b> Low Flow Analyses</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="low-flow-analyses.html"><a href="low-flow-analyses.html#what-is-a-xqy-flow"><i class="fa fa-check"></i><b>12.1</b> What is a xQy flow?</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="floods.html"><a href="floods.html"><i class="fa fa-check"></i><b>13</b> DRAFT Flood Frequency Analysis</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="floods.html"><a href="floods.html#challenge-create-a-function"><i class="fa fa-check"></i><b>13.1</b> Challenge: Create a function</a></li>
+</ul></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Hydroinformatics at VT</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="low-flow-analyses" class="section level1" number="12">
+<h1><span class="header-section-number">Chapter 12</span> Low Flow Analyses</h1>
+<div id="what-is-a-xqy-flow" class="section level2" number="12.1">
+<h2><span class="header-section-number">12.1</span> What is a xQy flow?</h2>
+<p>“The 1Q10 and 7Q10 are both hydrologically based design flows. The 1Q10 is the lowest 1-day average flow that occurs (on average) once every 10 years. The 7Q10 is the lowest 7-day average flow that occurs (on average) once every 10 years.” -EPA <a href="https://www.epa.gov/ceam/definition-and-characteristics-low-flows#1Q10" class="uri">https://www.epa.gov/ceam/definition-and-characteristics-low-flows#1Q10</a></p>
+<p>7Q10</p>
+<p>Once every 10 years: probability = 0.1 per year
+7 day average flow based on daily flow</p>
+<p>Download daily data for gage 02138500 Linville NC 1922-1984</p>
+<div class="sourceCode" id="cb158"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb158-1"><a href="low-flow-analyses.html#cb158-1" aria-hidden="true" tabindex="-1"></a>siteno <span class="ot">&lt;-</span> <span class="st">&quot;02138500&quot;</span></span>
+<span id="cb158-2"><a href="low-flow-analyses.html#cb158-2" aria-hidden="true" tabindex="-1"></a>startDate <span class="ot">&lt;-</span> <span class="st">&quot;1922-01-01&quot;</span></span>
+<span id="cb158-3"><a href="low-flow-analyses.html#cb158-3" aria-hidden="true" tabindex="-1"></a>endDate <span class="ot">&lt;-</span> <span class="st">&quot;1984-01-01&quot;</span></span>
+<span id="cb158-4"><a href="low-flow-analyses.html#cb158-4" aria-hidden="true" tabindex="-1"></a>parameter <span class="ot">&lt;-</span> <span class="st">&quot;00060&quot;</span></span>
+<span id="cb158-5"><a href="low-flow-analyses.html#cb158-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb158-6"><a href="low-flow-analyses.html#cb158-6" aria-hidden="true" tabindex="-1"></a>Qdat <span class="ot">&lt;-</span> <span class="fu">readNWISdv</span>(siteno, parameter, startDate, endDate) <span class="sc">%&gt;%</span> </span>
+<span id="cb158-7"><a href="low-flow-analyses.html#cb158-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">renameNWISColumns</span>()</span></code></pre></div>
+<p>Create X day rolling average for 7 Q 10, 7 day rolling average</p>
+<div class="sourceCode" id="cb159"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb159-1"><a href="low-flow-analyses.html#cb159-1" aria-hidden="true" tabindex="-1"></a>Xday <span class="ot">&lt;-</span> <span class="dv">7</span></span>
+<span id="cb159-2"><a href="low-flow-analyses.html#cb159-2" aria-hidden="true" tabindex="-1"></a>YrecInt <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb159-3"><a href="low-flow-analyses.html#cb159-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-4"><a href="low-flow-analyses.html#cb159-4" aria-hidden="true" tabindex="-1"></a>Qdat <span class="ot">&lt;-</span> Qdat <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">xdaymean =</span> <span class="fu">rollmean</span>(Flow, </span>
+<span id="cb159-5"><a href="low-flow-analyses.html#cb159-5" aria-hidden="true" tabindex="-1"></a>                                            Xday, </span>
+<span id="cb159-6"><a href="low-flow-analyses.html#cb159-6" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">fill =</span> <span class="cn">NA</span>, </span>
+<span id="cb159-7"><a href="low-flow-analyses.html#cb159-7" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">na.rm =</span> F, </span>
+<span id="cb159-8"><a href="low-flow-analyses.html#cb159-8" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">align =</span> <span class="st">&quot;right&quot;</span>))</span></code></pre></div>
+<p>Calculate lowest mean value (in the moving window) per year add ranks</p>
+<div class="sourceCode" id="cb160"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb160-1"><a href="low-flow-analyses.html#cb160-1" aria-hidden="true" tabindex="-1"></a>QyearlyMins <span class="ot">&lt;-</span> Qdat <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(Date)) <span class="sc">%&gt;%</span></span>
+<span id="cb160-2"><a href="low-flow-analyses.html#cb160-2" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
+<span id="cb160-3"><a href="low-flow-analyses.html#cb160-3" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">summarize</span>(<span class="at">minQ =</span> <span class="fu">min</span>(xdaymean, <span class="at">na.rm =</span> T), </span>
+<span id="cb160-4"><a href="low-flow-analyses.html#cb160-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">lenDat =</span> <span class="fu">length</span>(Flow),</span>
+<span id="cb160-5"><a href="low-flow-analyses.html#cb160-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">lenNAs =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(xdaymean))) <span class="sc">%&gt;%</span></span>
+<span id="cb160-6"><a href="low-flow-analyses.html#cb160-6" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">filter</span>(lenDat <span class="sc">&gt;</span> <span class="dv">328</span> <span class="sc">&amp;</span> lenNAs<span class="sc">/</span>lenDat <span class="sc">&lt;</span> <span class="fl">0.1</span>) <span class="co">#missing less than 10% of each year and 10% or fewer NAs</span></span></code></pre></div>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<div class="sourceCode" id="cb162"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb162-1"><a href="low-flow-analyses.html#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add rank column and return interval column</span></span>
+<span id="cb162-2"><a href="low-flow-analyses.html#cb162-2" aria-hidden="true" tabindex="-1"></a>QyearlyMins <span class="ot">&lt;-</span> QyearlyMins <span class="sc">%&gt;%</span> </span>
+<span id="cb162-3"><a href="low-flow-analyses.html#cb162-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">rank =</span> <span class="fu">rank</span>(minQ, <span class="at">ties.method =</span> <span class="st">&quot;first&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb162-4"><a href="low-flow-analyses.html#cb162-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">ReturnInterval =</span> (<span class="fu">length</span>(rank) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">/</span>rank) <span class="sc">%&gt;%</span></span>
+<span id="cb162-5"><a href="low-flow-analyses.html#cb162-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">ExceedProb =</span> <span class="dv">1</span><span class="sc">/</span>ReturnInterval)</span>
+<span id="cb162-6"><a href="low-flow-analyses.html#cb162-6" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb162-7"><a href="low-flow-analyses.html#cb162-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(QyearlyMins, <span class="fu">aes</span>(<span class="at">x =</span> ReturnInterval, <span class="at">y =</span> minQ))<span class="sc">+</span></span>
+<span id="cb162-8"><a href="low-flow-analyses.html#cb162-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code></pre></div>
+<p><img src="Hydroinformatics_Bookdown_files/figure-html/unnamed-chunk-99-1.png" width="672" /></p>
+<p><a href="https://water.usgs.gov/osw/bulletin17b/dl_flow.pdf" class="uri">https://water.usgs.gov/osw/bulletin17b/dl_flow.pdf</a></p>
+<p>Pearson Type III</p>
+<p>Flow = exp(Xbar + KS)</p>
+<p>where:</p>
+<p>Xbar = mean of the log discharge you are investigating</p>
+<p>K = frequency factor</p>
+<p>S = standard deviation of log discharges</p>
+<p>Frequency Factor</p>
+<p><span class="math inline">\(K = (2 / g) * ((1 +( g * z)) / 6 - ((g ^ 2) / 36)) ^ 3 - 1)\)</span></p>
+<p>Skewness</p>
+<p>g = skewness() from moments package</p>
+<p>Standard normal variate</p>
+<p>z = 4.91 * ((1 / y) ^ 0.14 - (1 - (1 / y)) ^ 0.14)</p>
+<p>y = recurrence interval</p>
+<div class="sourceCode" id="cb163"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb163-1"><a href="low-flow-analyses.html#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Measures of the distribution</span></span>
+<span id="cb163-2"><a href="low-flow-analyses.html#cb163-2" aria-hidden="true" tabindex="-1"></a>Xbar <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">log</span>(QyearlyMins<span class="sc">$</span>minQ))</span>
+<span id="cb163-3"><a href="low-flow-analyses.html#cb163-3" aria-hidden="true" tabindex="-1"></a>S    <span class="ot">&lt;-</span> <span class="fu">sd</span>(<span class="fu">log</span>(QyearlyMins<span class="sc">$</span>minQ))</span>
+<span id="cb163-4"><a href="low-flow-analyses.html#cb163-4" aria-hidden="true" tabindex="-1"></a>g    <span class="ot">&lt;-</span> <span class="fu">skewness</span>(<span class="fu">log</span>(QyearlyMins<span class="sc">$</span>minQ))</span>
+<span id="cb163-5"><a href="low-flow-analyses.html#cb163-5" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb163-6"><a href="low-flow-analyses.html#cb163-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb163-7"><a href="low-flow-analyses.html#cb163-7" aria-hidden="true" tabindex="-1"></a><span class="co">#apply this to the data so we can see how it fits</span></span>
+<span id="cb163-8"><a href="low-flow-analyses.html#cb163-8" aria-hidden="true" tabindex="-1"></a>QyearlyMins <span class="ot">&lt;-</span> QyearlyMins <span class="sc">%&gt;%</span> </span>
+<span id="cb163-9"><a href="low-flow-analyses.html#cb163-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z =</span> <span class="fl">4.91</span> <span class="sc">*</span> ((<span class="dv">1</span> <span class="sc">/</span> ReturnInterval) <span class="sc">^</span> <span class="fl">0.14</span> <span class="sc">-</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="dv">1</span> <span class="sc">/</span> ReturnInterval) <span class="sc">^</span> <span class="fl">0.14</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb163-10"><a href="low-flow-analyses.html#cb163-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">K =</span> (<span class="dv">2</span> <span class="sc">/</span> g) <span class="sc">*</span> (((<span class="dv">1</span> <span class="sc">+</span> (g <span class="sc">*</span> z) <span class="sc">/</span> <span class="dv">6</span> <span class="sc">-</span> (g <span class="sc">^</span> <span class="dv">2</span>) <span class="sc">/</span> <span class="dv">36</span>) <span class="sc">^</span> <span class="dv">3</span>) <span class="sc">-</span> <span class="dv">1</span>) ) <span class="sc">%&gt;%</span></span>
+<span id="cb163-11"><a href="low-flow-analyses.html#cb163-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Qfit =</span> <span class="fu">exp</span>(Xbar <span class="sc">+</span> K <span class="sc">*</span> S))</span>
+<span id="cb163-12"><a href="low-flow-analyses.html#cb163-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb163-13"><a href="low-flow-analyses.html#cb163-13" aria-hidden="true" tabindex="-1"></a>QyearlyMins <span class="sc">%&gt;%</span> </span>
+<span id="cb163-14"><a href="low-flow-analyses.html#cb163-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> ReturnInterval, <span class="at">y =</span> minQ, <span class="at">color =</span> <span class="st">&quot;Estimated&quot;</span>))<span class="sc">+</span></span>
+<span id="cb163-15"><a href="low-flow-analyses.html#cb163-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb163-16"><a href="low-flow-analyses.html#cb163-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> ReturnInterval, <span class="at">y =</span> Qfit, <span class="at">color =</span> <span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb163-17"><a href="low-flow-analyses.html#cb163-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()<span class="sc">+</span></span>
+<span id="cb163-18"><a href="low-flow-analyses.html#cb163-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>()<span class="sc">+</span></span>
+<span id="cb163-19"><a href="low-flow-analyses.html#cb163-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">&quot;X day yearly minimum&quot;</span>)<span class="sc">+</span></span>
+<span id="cb163-20"><a href="low-flow-analyses.html#cb163-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Return Interval&quot;</span>)</span></code></pre></div>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="Hydroinformatics_Bookdown_files/figure-html/unnamed-chunk-100-1.png" width="672" /></p>
+<p>Calculate 7Q10 or whatever we want following the xQy format and the values of x and y above</p>
+<div class="sourceCode" id="cb165"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb165-1"><a href="low-flow-analyses.html#cb165-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xQy ei: 7Q10</span></span>
+<span id="cb165-2"><a href="low-flow-analyses.html#cb165-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">=</span> YrecInt</span>
+<span id="cb165-3"><a href="low-flow-analyses.html#cb165-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-4"><a href="low-flow-analyses.html#cb165-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Find these values based on established relationships</span></span>
+<span id="cb165-5"><a href="low-flow-analyses.html#cb165-5" aria-hidden="true" tabindex="-1"></a>z    <span class="ot">&lt;-</span> <span class="fl">4.91</span> <span class="sc">*</span> ((<span class="dv">1</span> <span class="sc">/</span> y) <span class="sc">^</span> <span class="fl">0.14</span> <span class="sc">-</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="dv">1</span> <span class="sc">/</span> y) <span class="sc">^</span> <span class="fl">0.14</span>)</span>
+<span id="cb165-6"><a href="low-flow-analyses.html#cb165-6" aria-hidden="true" tabindex="-1"></a>K    <span class="ot">&lt;-</span> (<span class="dv">2</span> <span class="sc">/</span> g) <span class="sc">*</span> (((<span class="dv">1</span> <span class="sc">+</span> (g <span class="sc">*</span> z) <span class="sc">/</span> <span class="dv">6</span> <span class="sc">-</span> (g <span class="sc">^</span> <span class="dv">2</span>) <span class="sc">/</span> <span class="dv">36</span>) <span class="sc">^</span> <span class="dv">3</span>) <span class="sc">-</span> <span class="dv">1</span>) </span>
+<span id="cb165-7"><a href="low-flow-analyses.html#cb165-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-8"><a href="low-flow-analyses.html#cb165-8" aria-hidden="true" tabindex="-1"></a>PearsonxQy <span class="ot">&lt;-</span> <span class="fu">exp</span>(Xbar <span class="sc">+</span> K <span class="sc">*</span> S)</span></code></pre></div>
+<p>Distribution-free method</p>
+<p>The expression for xQy is:</p>
+<pre><code>xQy = (1-e) X(ml) + eX(m2)
+
+          where: [] indicates value is truncated
+          X(m) = the m-th lowest annual low flow of record
+          ml = [(n+1)/y]
+          m2 = [(n+l)/y] + 1
+          [z] = the largest integer less than or equal to z
+          e = (n+l)/y - [(n+l)/y]
+          This method is only appropriate when the desired return period is less than n/5 years
+          </code></pre>
+<div class="sourceCode" id="cb167"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb167-1"><a href="low-flow-analyses.html#cb167-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> Xday</span>
+<span id="cb167-2"><a href="low-flow-analyses.html#cb167-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> YrecInt</span>
+<span id="cb167-3"><a href="low-flow-analyses.html#cb167-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">length</span>(QyearlyMins<span class="sc">$</span>minQ)</span>
+<span id="cb167-4"><a href="low-flow-analyses.html#cb167-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-5"><a href="low-flow-analyses.html#cb167-5" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">trunc</span>((n <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">/</span>y)</span>
+<span id="cb167-6"><a href="low-flow-analyses.html#cb167-6" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">trunc</span>(((n <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">/</span>y) <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb167-7"><a href="low-flow-analyses.html#cb167-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-8"><a href="low-flow-analyses.html#cb167-8" aria-hidden="true" tabindex="-1"></a>e <span class="ot">&lt;-</span> ((n <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">/</span>y) <span class="sc">-</span> m1</span>
+<span id="cb167-9"><a href="low-flow-analyses.html#cb167-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-10"><a href="low-flow-analyses.html#cb167-10" aria-hidden="true" tabindex="-1"></a>Xm1 <span class="ot">&lt;-</span> QyearlyMins<span class="sc">$</span>minQ[QyearlyMins<span class="sc">$</span>rank <span class="sc">==</span> m1]</span>
+<span id="cb167-11"><a href="low-flow-analyses.html#cb167-11" aria-hidden="true" tabindex="-1"></a>Xm2 <span class="ot">&lt;-</span> QyearlyMins<span class="sc">$</span>minQ[QyearlyMins<span class="sc">$</span>rank <span class="sc">==</span> m2]</span>
+<span id="cb167-12"><a href="low-flow-analyses.html#cb167-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-13"><a href="low-flow-analyses.html#cb167-13" aria-hidden="true" tabindex="-1"></a>DFxQy <span class="ot">&lt;-</span> (<span class="dv">1</span><span class="sc">-</span>e) <span class="sc">*</span> Xm1 <span class="sc">+</span> e <span class="sc">*</span> Xm2</span></code></pre></div>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="lfas.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="floods.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["Hydroinformatics_Bookdown.pdf", "Hydroinformatics_Bookdown.epub"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

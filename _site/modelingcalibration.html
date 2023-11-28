@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 18 Intro to Modeling - Calibrate HBV | Hydroinformatics at VT</title>
+  <meta name="description" content="This bookdown contains notes and exercises for a course in hydroinformatics at Virginia Tech." />
+  <meta name="generator" content="bookdown 0.27 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 18 Intro to Modeling - Calibrate HBV | Hydroinformatics at VT" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="This bookdown contains notes and exercises for a course in hydroinformatics at Virginia Tech." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 18 Intro to Modeling - Calibrate HBV | Hydroinformatics at VT" />
+  
+  <meta name="twitter:description" content="This bookdown contains notes and exercises for a course in hydroinformatics at Virginia Tech." />
+  
+
+<meta name="author" content="JP Gannon" />
+
+
+<meta name="date" content="2023-02-09" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="modelingintro.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.1.1/leaflet.js"></script>
+<script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.1.1/leaflet-providers-plugin.js"></script>
+<script src="libs/rglWebGL-binding-0.109.6/rglWebGL.js"></script>
+<link href="libs/rglwidgetClass-0.109.6/rgl.css" rel="stylesheet" />
+<script src="libs/rglwidgetClass-0.109.6/rglClass.min.js"></script>
+<script type = "text/plain" id = "rgl-vertex-shader">
+#line 2 1
+// File 1 is the vertex shader
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#endif
+
+attribute vec3 aPos;
+attribute vec4 aCol;
+uniform mat4 mvMatrix;
+uniform mat4 prMatrix;
+varying vec4 vCol;
+varying vec4 vPosition;
+
+#ifdef NEEDS_VNORMAL
+attribute vec3 aNorm;
+uniform mat4 normMatrix;
+varying vec4 vNormal;
+#endif
+
+#if defined(HAS_TEXTURE) || defined (IS_TEXT)
+attribute vec2 aTexcoord;
+varying vec2 vTexcoord;
+#endif
+
+#ifdef FIXED_SIZE
+uniform vec3 textScale;
+#endif
+
+#ifdef FIXED_QUADS
+attribute vec3 aOfs;
+#endif
+
+#ifdef IS_TWOSIDED
+#ifdef HAS_NORMALS
+varying float normz;
+uniform mat4 invPrMatrix;
+#else
+attribute vec3 aPos1;
+attribute vec3 aPos2;
+varying float normz;
+#endif
+#endif // IS_TWOSIDED
+
+#ifdef FAT_LINES
+attribute vec3 aNext;
+attribute vec2 aPoint;
+varying vec2 vPoint;
+varying float vLength;
+uniform float uAspect;
+uniform float uLwd;
+#endif
+
+
+void main(void) {
+  
+#ifndef IS_BRUSH
+#if defined(NCLIPPLANES) || !defined(FIXED_QUADS) || defined(HAS_FOG)
+  vPosition = mvMatrix * vec4(aPos, 1.);
+#endif
+  
+#ifndef FIXED_QUADS
+  gl_Position = prMatrix * vPosition;
+#endif
+#endif // !IS_BRUSH
+  
+#ifdef IS_POINTS
+  gl_PointSize = POINTSIZE;
+#endif
+  
+  vCol = aCol;
+  
+#ifdef NEEDS_VNORMAL
+  vNormal = normMatrix * vec4(-aNorm, dot(aNorm, aPos));
+#endif
+  
+#ifdef IS_TWOSIDED
+#ifdef HAS_NORMALS
+  /* normz should be calculated *after* projection */
+  normz = (invPrMatrix*vNormal).z;
+#else
+  vec4 pos1 = prMatrix*(mvMatrix*vec4(aPos1, 1.));
+  pos1 = pos1/pos1.w - gl_Position/gl_Position.w;
+  vec4 pos2 = prMatrix*(mvMatrix*vec4(aPos2, 1.));
+  pos2 = pos2/pos2.w - gl_Position/gl_Position.w;
+  normz = pos1.x*pos2.y - pos1.y*pos2.x;
+#endif
+#endif // IS_TWOSIDED
+  
+#ifdef NEEDS_VNORMAL
+  vNormal = vec4(normalize(vNormal.xyz/vNormal.w), 1);
+#endif
+  
+#if defined(HAS_TEXTURE) || defined(IS_TEXT)
+  vTexcoord = aTexcoord;
+#endif
+  
+#if defined(FIXED_SIZE) && !defined(ROTATING)
+  vec4 pos = prMatrix * mvMatrix * vec4(aPos, 1.);
+  pos = pos/pos.w;
+  gl_Position = pos + vec4(aOfs*textScale, 0.);
+#endif
+  
+#if defined(IS_SPRITES) && !defined(FIXED_SIZE)
+  vec4 pos = mvMatrix * vec4(aPos, 1.);
+  pos = pos/pos.w + vec4(aOfs,  0.);
+  gl_Position = prMatrix*pos;
+#endif
+  
+#ifdef FAT_LINES
+  /* This code was inspired by Matt Deslauriers' code in 
+   https://mattdesl.svbtle.com/drawing-lines-is-hard */
+  vec2 aspectVec = vec2(uAspect, 1.0);
+  mat4 projViewModel = prMatrix * mvMatrix;
+  vec4 currentProjected = projViewModel * vec4(aPos, 1.0);
+  currentProjected = currentProjected/currentProjected.w;
+  vec4 nextProjected = projViewModel * vec4(aNext, 1.0);
+  vec2 currentScreen = currentProjected.xy * aspectVec;
+  vec2 nextScreen = (nextProjected.xy / nextProjected.w) * aspectVec;
+  float len = uLwd;
+  vec2 dir = vec2(1.0, 0.0);
+  vPoint = aPoint;
+  vLength = length(nextScreen - currentScreen)/2.0;
+  vLength = vLength/(vLength + len);
+  if (vLength > 0.0) {
+    dir = normalize(nextScreen - currentScreen);
+  }
+  vec2 normal = vec2(-dir.y, dir.x);
+  dir.x /= uAspect;
+  normal.x /= uAspect;
+  vec4 offset = vec4(len*(normal*aPoint.x*aPoint.y - dir), 0.0, 0.0);
+  gl_Position = currentProjected + offset;
+#endif
+  
+#ifdef IS_BRUSH
+  gl_Position = vec4(aPos, 1.);
+#endif
+}
+</script>
+<script type = "text/plain" id = "rgl-fragment-shader">
+#line 2 2
+// File 2 is the fragment shader
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#endif
+varying vec4 vCol; // carries alpha
+varying vec4 vPosition;
+#if defined(HAS_TEXTURE) || defined (IS_TEXT)
+varying vec2 vTexcoord;
+uniform sampler2D uSampler;
+#endif
+
+#ifdef HAS_FOG
+uniform int uFogMode;
+uniform vec3 uFogColor;
+uniform vec4 uFogParms;
+#endif
+
+#if defined(IS_LIT) && !defined(FIXED_QUADS)
+varying vec4 vNormal;
+#endif
+
+#if NCLIPPLANES > 0
+uniform vec4 vClipplane[NCLIPPLANES];
+#endif
+
+#if NLIGHTS > 0
+uniform mat4 mvMatrix;
+#endif
+
+#ifdef IS_LIT
+uniform vec3 emission;
+uniform float shininess;
+#if NLIGHTS > 0
+uniform vec3 ambient[NLIGHTS];
+uniform vec3 specular[NLIGHTS]; // light*material
+uniform vec3 diffuse[NLIGHTS];
+uniform vec3 lightDir[NLIGHTS];
+uniform bool viewpoint[NLIGHTS];
+uniform bool finite[NLIGHTS];
+#endif
+#endif // IS_LIT
+
+#ifdef IS_TWOSIDED
+uniform bool front;
+varying float normz;
+#endif
+
+#ifdef FAT_LINES
+varying vec2 vPoint;
+varying float vLength;
+#endif
+
+void main(void) {
+  vec4 fragColor;
+#ifdef FAT_LINES
+  vec2 point = vPoint;
+  bool neg = point.y < 0.0;
+  point.y = neg ? (point.y + vLength)/(1.0 - vLength) :
+                 -(point.y - vLength)/(1.0 - vLength);
+#if defined(IS_TRANSPARENT) && defined(IS_LINESTRIP)
+  if (neg && length(point) <= 1.0) discard;
+#endif
+  point.y = min(point.y, 0.0);
+  if (length(point) > 1.0) discard;
+#endif // FAT_LINES
+  
+#ifdef ROUND_POINTS
+  vec2 coord = gl_PointCoord - vec2(0.5);
+  if (length(coord) > 0.5) discard;
+#endif
+  
+#if NCLIPPLANES > 0
+  for (int i = 0; i < NCLIPPLANES; i++)
+    if (dot(vPosition, vClipplane[i]) < 0.0) discard;
+#endif
+    
+#ifdef FIXED_QUADS
+    vec3 n = vec3(0., 0., 1.);
+#elif defined(IS_LIT)
+    vec3 n = normalize(vNormal.xyz);
+#endif
+    
+#ifdef IS_TWOSIDED
+    if ((normz <= 0.) != front) discard;
+#endif
+    
+#ifdef IS_LIT
+    vec3 eye = normalize(-vPosition.xyz/vPosition.w);
+    vec3 lightdir;
+    vec4 colDiff;
+    vec3 halfVec;
+    vec4 lighteffect = vec4(emission, 0.);
+    vec3 col;
+    float nDotL;
+#ifdef FIXED_QUADS
+    n = -faceforward(n, n, eye);
+#endif
+    
+#if NLIGHTS > 0
+    for (int i=0;i<NLIGHTS;i++) {
+      colDiff = vec4(vCol.rgb * diffuse[i], vCol.a);
+      lightdir = lightDir[i];
+      if (!viewpoint[i])
+        lightdir = (mvMatrix * vec4(lightdir, 1.)).xyz;
+      if (!finite[i]) {
+        halfVec = normalize(lightdir + eye);
+      } else {
+        lightdir = normalize(lightdir - vPosition.xyz/vPosition.w);
+        halfVec = normalize(lightdir + eye);
+      }
+      col = ambient[i];
+      nDotL = dot(n, lightdir);
+      col = col + max(nDotL, 0.) * colDiff.rgb;
+      col = col + pow(max(dot(halfVec, n), 0.), shininess) * specular[i];
+      lighteffect = lighteffect + vec4(col, colDiff.a);
+    }
+#endif
+    
+#else // not IS_LIT
+    vec4 colDiff = vCol;
+    vec4 lighteffect = colDiff;
+#endif
+    
+#ifdef IS_TEXT
+    vec4 textureColor = lighteffect*texture2D(uSampler, vTexcoord);
+#endif
+    
+#ifdef HAS_TEXTURE
+#ifdef TEXTURE_rgb
+    vec4 textureColor = lighteffect*vec4(texture2D(uSampler, vTexcoord).rgb, 1.);
+#endif
+    
+#ifdef TEXTURE_rgba
+    vec4 textureColor = lighteffect*texture2D(uSampler, vTexcoord);
+#endif
+    
+#ifdef TEXTURE_alpha
+    vec4 textureColor = texture2D(uSampler, vTexcoord);
+    float luminance = dot(vec3(1.,1.,1.), textureColor.rgb)/3.;
+    textureColor =  vec4(lighteffect.rgb, lighteffect.a*luminance);
+#endif
+    
+#ifdef TEXTURE_luminance
+    vec4 textureColor = vec4(lighteffect.rgb*dot(texture2D(uSampler, vTexcoord).rgb, vec3(1.,1.,1.))/3., lighteffect.a);
+#endif
+    
+#ifdef TEXTURE_luminance_alpha
+    vec4 textureColor = texture2D(uSampler, vTexcoord);
+    float luminance = dot(vec3(1.,1.,1.),textureColor.rgb)/3.;
+    textureColor = vec4(lighteffect.rgb*luminance, lighteffect.a*textureColor.a);
+#endif
+    
+    fragColor = textureColor;
+
+#elif defined(IS_TEXT)
+    if (textureColor.a < 0.1)
+      discard;
+    else
+      fragColor = textureColor;
+#else
+    fragColor = lighteffect;
+#endif // HAS_TEXTURE
+    
+#ifdef HAS_FOG
+    // uFogParms elements: x = near, y = far, z = fogscale, w = (1-sin(FOV/2))/(1+sin(FOV/2))
+    // In Exp and Exp2: use density = density/far
+    // fogF will be the proportion of fog
+    // Initialize it to the linear value
+    float fogF;
+    if (uFogMode > 0) {
+      fogF = (uFogParms.y - vPosition.z/vPosition.w)/(uFogParms.y - uFogParms.x);
+      if (uFogMode > 1)
+        fogF = mix(uFogParms.w, 1.0, fogF);
+      fogF = fogF*uFogParms.z;
+      if (uFogMode == 2)
+        fogF = 1.0 - exp(-fogF);
+      // Docs are wrong: use (density*c)^2, not density*c^2
+      // https://gitlab.freedesktop.org/mesa/mesa/-/blob/master/src/mesa/swrast/s_fog.c#L58
+      else if (uFogMode == 3)
+        fogF = 1.0 - exp(-fogF*fogF);
+      fogF = clamp(fogF, 0.0, 1.0);
+      gl_FragColor = vec4(mix(fragColor.rgb, uFogColor, fogF), fragColor.a);
+    } else gl_FragColor = fragColor;
+#else
+    gl_FragColor = fragColor;
+#endif // HAS_FOG
+    
+}
+</script>
+<script src="libs/CanvasMatrix4-0.109.6/CanvasMatrix.min.js"></script>
+<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GBDXSZFFSR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-GBDXSZFFSR');
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Hydroinformatics</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.0.1" data-path="index.html"><a href="index.html#to-help-me-keep-get-an-idea-of-who-is-using-this-resource-so-i-can-improve-it-in-the-future-please-consider-filling-out-any-or-all-of-this-survey-httpsforms.gle6zcntzvr1wzzuh6s7-thanks"><i class="fa fa-check"></i><b>1.0.1</b> To help me keep get an idea of who is using this resource so I can improve it in the future, please consider filling out any or all of this survey: https://forms.gle/6Zcntzvr1wZZUh6S7 Thanks!</a></li>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#how-to-use-these-materials"><i class="fa fa-check"></i><b>1.1</b> How to use these materials</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#table-of-contents"><i class="fa fa-check"></i><b>1.2</b> Table of contents:</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="Plotting.html"><a href="Plotting.html"><i class="fa fa-check"></i><b>2</b> Intro to Plotting</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="Plotting.html"><a href="Plotting.html#download-and-install-tidyverse-library"><i class="fa fa-check"></i><b>2.1</b> Download and install tidyverse library</a></li>
+<li class="chapter" data-level="2.2" data-path="Plotting.html"><a href="Plotting.html#reading-data"><i class="fa fa-check"></i><b>2.2</b> Reading data</a></li>
+<li class="chapter" data-level="2.3" data-path="Plotting.html"><a href="Plotting.html#our-first-ggplot"><i class="fa fa-check"></i><b>2.3</b> Our first ggplot</a></li>
+<li class="chapter" data-level="2.4" data-path="Plotting.html"><a href="Plotting.html#change-point-type"><i class="fa fa-check"></i><b>2.4</b> Change point type</a></li>
+<li class="chapter" data-level="2.5" data-path="Plotting.html"><a href="Plotting.html#set-colors"><i class="fa fa-check"></i><b>2.5</b> Set colors</a></li>
+<li class="chapter" data-level="2.6" data-path="Plotting.html"><a href="Plotting.html#controlling-color-with-a-third-variable-and-other-functions"><i class="fa fa-check"></i><b>2.6</b> Controlling color with a third variable and other functions</a></li>
+<li class="chapter" data-level="2.7" data-path="Plotting.html"><a href="Plotting.html#plotting-multiple-groups"><i class="fa fa-check"></i><b>2.7</b> Plotting multiple groups</a></li>
+<li class="chapter" data-level="2.8" data-path="Plotting.html"><a href="Plotting.html#facets"><i class="fa fa-check"></i><b>2.8</b> Facets</a></li>
+<li class="chapter" data-level="2.9" data-path="Plotting.html"><a href="Plotting.html#two-variable-faceting"><i class="fa fa-check"></i><b>2.9</b> Two variable faceting</a></li>
+<li class="chapter" data-level="2.10" data-path="Plotting.html"><a href="Plotting.html#boxplots"><i class="fa fa-check"></i><b>2.10</b> Boxplots</a></li>
+<li class="chapter" data-level="2.11" data-path="Plotting.html"><a href="Plotting.html#more-about-color-size-etc"><i class="fa fa-check"></i><b>2.11</b> More about color, size, etc</a></li>
+<li class="chapter" data-level="2.12" data-path="Plotting.html"><a href="Plotting.html#multiple-geoms"><i class="fa fa-check"></i><b>2.12</b> Multiple geoms</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="Programming.html"><a href="Programming.html"><i class="fa fa-check"></i><b>3</b> R Tidyverse Programming Basics</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="Programming.html"><a href="Programming.html#introduction-1"><i class="fa fa-check"></i><b>3.1</b> Introduction</a></li>
+<li class="chapter" data-level="3.2" data-path="Programming.html"><a href="Programming.html#you-can-use-r-as-a-calculator"><i class="fa fa-check"></i><b>3.2</b> You can use R as a calculator</a></li>
+<li class="chapter" data-level="3.3" data-path="Programming.html"><a href="Programming.html#you-can-create-new-objects-using--"><i class="fa fa-check"></i><b>3.3</b> You can create new objects using &lt;-</a></li>
+<li class="chapter" data-level="3.4" data-path="Programming.html"><a href="Programming.html#using-functions"><i class="fa fa-check"></i><b>3.4</b> Using functions</a></li>
+<li class="chapter" data-level="3.5" data-path="Programming.html"><a href="Programming.html#read-in-some-data."><i class="fa fa-check"></i><b>3.5</b> Read in some data.</a></li>
+<li class="chapter" data-level="3.6" data-path="Programming.html"><a href="Programming.html#wait-hold-up.-what-is-a-tibble"><i class="fa fa-check"></i><b>3.6</b> Wait, hold up. What is a tibble?</a></li>
+<li class="chapter" data-level="3.7" data-path="Programming.html"><a href="Programming.html#data-wrangling-in-dplyr"><i class="fa fa-check"></i><b>3.7</b> Data wrangling in dplyr</a></li>
+<li class="chapter" data-level="3.8" data-path="Programming.html"><a href="Programming.html#filter"><i class="fa fa-check"></i><b>3.8</b> Filter</a>
+<ul>
+<li class="chapter" data-level="3.8.1" data-path="Programming.html"><a href="Programming.html#multiple-conditions"><i class="fa fa-check"></i><b>3.8.1</b> Multiple conditions</a></li>
+</ul></li>
+<li class="chapter" data-level="3.9" data-path="Programming.html"><a href="Programming.html#arrange"><i class="fa fa-check"></i><b>3.9</b> Arrange</a></li>
+<li class="chapter" data-level="3.10" data-path="Programming.html"><a href="Programming.html#select"><i class="fa fa-check"></i><b>3.10</b> Select</a></li>
+<li class="chapter" data-level="3.11" data-path="Programming.html"><a href="Programming.html#mutate"><i class="fa fa-check"></i><b>3.11</b> Mutate</a></li>
+<li class="chapter" data-level="3.12" data-path="Programming.html"><a href="Programming.html#summarize"><i class="fa fa-check"></i><b>3.12</b> Summarize</a></li>
+<li class="chapter" data-level="3.13" data-path="Programming.html"><a href="Programming.html#multiple-operations-with-pipes"><i class="fa fa-check"></i><b>3.13</b> Multiple operations with pipes</a>
+<ul>
+<li class="chapter" data-level="3.13.1" data-path="Programming.html"><a href="Programming.html#lets-say-we-want-to-tell-r-to-make-a-pbj-sandwich-by-using-the-pbbread-jbread-and-joinslices-functions-and-the-data-ingredients.-if-we-do-this-saving-each-step-if-would-look-like-this"><i class="fa fa-check"></i><b>3.13.1</b> Let’s say we want to tell R to make a PB&amp;J sandwich by using the pbbread(), jbread(), and joinslices() functions and the data “ingredients”. If we do this saving each step if would look like this:</a></li>
+<li class="chapter" data-level="3.13.2" data-path="Programming.html"><a href="Programming.html#if-we-nest-the-functions-together-we-get-this"><i class="fa fa-check"></i><b>3.13.2</b> If we nest the functions together we get this</a></li>
+<li class="chapter" data-level="3.13.3" data-path="Programming.html"><a href="Programming.html#using-the-pipe-it-would-look-like-this"><i class="fa fa-check"></i><b>3.13.3</b> Using the pipe it would look like this</a></li>
+<li class="chapter" data-level="3.13.4" data-path="Programming.html"><a href="Programming.html#when-you-use-the-pipe-it-basically-takes-whatever-came-out-of-the-first-function-and-puts-it-into-the-data-argument-for-the-next-one"><i class="fa fa-check"></i><b>3.13.4</b> When you use the pipe, it basically takes whatever came out of the first function and puts it into the data argument for the next one</a></li>
+</ul></li>
+<li class="chapter" data-level="3.14" data-path="Programming.html"><a href="Programming.html#save-your-results-to-a-new-tibble"><i class="fa fa-check"></i><b>3.14</b> Save your results to a new tibble</a></li>
+<li class="chapter" data-level="3.15" data-path="Programming.html"><a href="Programming.html#what-about-nas"><i class="fa fa-check"></i><b>3.15</b> What about NAs?</a></li>
+<li class="chapter" data-level="3.16" data-path="Programming.html"><a href="Programming.html#what-are-some-things-you-think-ill-ask-you-to-do-for-the-activity-next-class"><i class="fa fa-check"></i><b>3.16</b> What are some things you think I’ll ask you to do for the activity next class?</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="introactivity.html"><a href="introactivity.html"><i class="fa fa-check"></i><b>4</b> ACTIVITY Intro Skills</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="introactivity.html"><a href="introactivity.html#problem-1"><i class="fa fa-check"></i><b>4.1</b> Problem 1</a></li>
+<li class="chapter" data-level="4.2" data-path="introactivity.html"><a href="introactivity.html#problem-2"><i class="fa fa-check"></i><b>4.2</b> Problem 2</a></li>
+<li class="chapter" data-level="4.3" data-path="introactivity.html"><a href="introactivity.html#problem-3"><i class="fa fa-check"></i><b>4.3</b> Problem 3</a></li>
+<li class="chapter" data-level="4.4" data-path="introactivity.html"><a href="introactivity.html#problem-4"><i class="fa fa-check"></i><b>4.4</b> Problem 4</a></li>
+<li class="chapter" data-level="4.5" data-path="introactivity.html"><a href="introactivity.html#problem-5"><i class="fa fa-check"></i><b>4.5</b> Problem 5</a></li>
+<li class="chapter" data-level="4.6" data-path="introactivity.html"><a href="introactivity.html#problem-6"><i class="fa fa-check"></i><b>4.6</b> Problem 6</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="stats.html"><a href="stats.html"><i class="fa fa-check"></i><b>5</b> Introduction to Basic Statistics</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="stats.html"><a href="stats.html#reading-for-this-section-statistical-methods-in-water-resources-chapter-1"><i class="fa fa-check"></i><b>5.1</b> Reading for this section: Statistical Methods in Water Resources: Chapter 1</a></li>
+<li class="chapter" data-level="5.2" data-path="stats.html"><a href="stats.html#questions-for-today"><i class="fa fa-check"></i><b>5.2</b> Questions for today:</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="stats.html"><a href="stats.html#stack-plots-to-compare-histogram-and-pdf"><i class="fa fa-check"></i><b>5.2.1</b> Stack plots to compare histogram and pdf</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="stats.html"><a href="stats.html#what-is-the-difference-between-a-sample-and-a-population."><i class="fa fa-check"></i><b>5.3</b> What is the difference between a sample and a population.</a></li>
+<li class="chapter" data-level="5.4" data-path="stats.html"><a href="stats.html#measuring-our-sample-distribution-central-tendency."><i class="fa fa-check"></i><b>5.4</b> Measuring our sample distribution: central tendency.</a>
+<ul>
+<li class="chapter" data-level="5.4.1" data-path="stats.html"><a href="stats.html#so-whats-a-weighted-average"><i class="fa fa-check"></i><b>5.4.1</b> So what’s a weighted average?</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="stats.html"><a href="stats.html#measures-of-variability"><i class="fa fa-check"></i><b>5.5</b> Measures of variability</a></li>
+<li class="chapter" data-level="5.6" data-path="stats.html"><a href="stats.html#what-is-a-normal-distribution-and-how-can-we-determine-if-we-have-one"><i class="fa fa-check"></i><b>5.6</b> What is a normal distribution and how can we determine if we have one?</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="statsactivity.html"><a href="statsactivity.html"><i class="fa fa-check"></i><b>6</b> ACTIVITY Intro Stats</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="statsactivity.html"><a href="statsactivity.html#problem-1-1"><i class="fa fa-check"></i><b>6.1</b> Problem 1</a></li>
+<li class="chapter" data-level="6.2" data-path="statsactivity.html"><a href="statsactivity.html#problem-2-1"><i class="fa fa-check"></i><b>6.2</b> Problem 2</a></li>
+<li class="chapter" data-level="6.3" data-path="statsactivity.html"><a href="statsactivity.html#problem-3-1"><i class="fa fa-check"></i><b>6.3</b> Problem 3</a></li>
+<li class="chapter" data-level="6.4" data-path="statsactivity.html"><a href="statsactivity.html#problem-4-1"><i class="fa fa-check"></i><b>6.4</b> Problem 4</a></li>
+<li class="chapter" data-level="6.5" data-path="statsactivity.html"><a href="statsactivity.html#problem-5-1"><i class="fa fa-check"></i><b>6.5</b> Problem 5</a></li>
+<li class="chapter" data-level="6.6" data-path="statsactivity.html"><a href="statsactivity.html#problem-6-1"><i class="fa fa-check"></i><b>6.6</b> Problem 6</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="getdata.html"><a href="getdata.html"><i class="fa fa-check"></i><b>7</b> Joins, Pivots, and USGS dataRetrieval</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="getdata.html"><a href="getdata.html#goals-for-today"><i class="fa fa-check"></i><b>7.1</b> Goals for today</a></li>
+<li class="chapter" data-level="7.2" data-path="getdata.html"><a href="getdata.html#exploring-what-dataretrieval-can-do."><i class="fa fa-check"></i><b>7.2</b> Exploring what dataRetrieval can do.</a></li>
+<li class="chapter" data-level="7.3" data-path="getdata.html"><a href="getdata.html#joins"><i class="fa fa-check"></i><b>7.3</b> Joins</a></li>
+<li class="chapter" data-level="7.4" data-path="getdata.html"><a href="getdata.html#join-example"><i class="fa fa-check"></i><b>7.4</b> Join example</a></li>
+<li class="chapter" data-level="7.5" data-path="getdata.html"><a href="getdata.html#finding-ids-to-download-usgs-data"><i class="fa fa-check"></i><b>7.5</b> Finding IDs to download USGS data</a></li>
+<li class="chapter" data-level="7.6" data-path="getdata.html"><a href="getdata.html#ok-lets-download-some-data"><i class="fa fa-check"></i><b>7.6</b> OK let’s download some data!</a></li>
+<li class="chapter" data-level="7.7" data-path="getdata.html"><a href="getdata.html#pivoting-wide-and-long-data"><i class="fa fa-check"></i><b>7.7</b> Pivoting: wide and long data</a></li>
+<li class="chapter" data-level="7.8" data-path="getdata.html"><a href="getdata.html#pivot-examples"><i class="fa fa-check"></i><b>7.8</b> Pivot Examples</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="joinpivotDR.html"><a href="joinpivotDR.html"><i class="fa fa-check"></i><b>8</b> ACTIVITY: Joins Pivots dataRetrieval</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="joinpivotDR.html"><a href="joinpivotDR.html#load-the-tidyverse-dataretrieval-and-patchwork-packages."><i class="fa fa-check"></i><b>8.1</b> Load the tidyverse, dataRetrieval, and patchwork packages.</a></li>
+<li class="chapter" data-level="8.2" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-1-2"><i class="fa fa-check"></i><b>8.2</b> Problem 1</a></li>
+<li class="chapter" data-level="8.3" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-2-2"><i class="fa fa-check"></i><b>8.3</b> Problem 2</a></li>
+<li class="chapter" data-level="8.4" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-3-2"><i class="fa fa-check"></i><b>8.4</b> Problem 3</a></li>
+<li class="chapter" data-level="8.5" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-4-2"><i class="fa fa-check"></i><b>8.5</b> Problem 4</a></li>
+<li class="chapter" data-level="8.6" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-5-2"><i class="fa fa-check"></i><b>8.6</b> Problem 5</a></li>
+<li class="chapter" data-level="8.7" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-6-2"><i class="fa fa-check"></i><b>8.7</b> Problem 6</a></li>
+<li class="chapter" data-level="8.8" data-path="joinpivotDR.html"><a href="joinpivotDR.html#problem-7"><i class="fa fa-check"></i><b>8.8</b> Problem 7</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="Summative1.html"><a href="Summative1.html"><i class="fa fa-check"></i><b>9</b> ACTIVITY Summative 1</a>
+<ul>
+<li class="chapter" data-level="9.0.1" data-path="Summative1.html"><a href="Summative1.html#instructions"><i class="fa fa-check"></i><b>9.0.1</b> Instructions</a></li>
+<li class="chapter" data-level="9.1" data-path="Summative1.html"><a href="Summative1.html#problem-1-3"><i class="fa fa-check"></i><b>9.1</b> Problem 1</a></li>
+<li class="chapter" data-level="9.2" data-path="Summative1.html"><a href="Summative1.html#problem-2-3"><i class="fa fa-check"></i><b>9.2</b> Problem 2</a></li>
+<li class="chapter" data-level="9.3" data-path="Summative1.html"><a href="Summative1.html#problem-3-3"><i class="fa fa-check"></i><b>9.3</b> Problem 3</a></li>
+<li class="chapter" data-level="9.4" data-path="Summative1.html"><a href="Summative1.html#problem-4-3"><i class="fa fa-check"></i><b>9.4</b> Problem 4</a></li>
+<li class="chapter" data-level="9.5" data-path="Summative1.html"><a href="Summative1.html#problem-5-3"><i class="fa fa-check"></i><b>9.5</b> Problem 5</a></li>
+<li class="chapter" data-level="9.6" data-path="Summative1.html"><a href="Summative1.html#problem-6-3"><i class="fa fa-check"></i><b>9.6</b> Problem 6</a></li>
+<li class="chapter" data-level="9.7" data-path="Summative1.html"><a href="Summative1.html#problem-7-1"><i class="fa fa-check"></i><b>9.7</b> Problem 7</a></li>
+<li class="chapter" data-level="9.8" data-path="Summative1.html"><a href="Summative1.html#problem-8"><i class="fa fa-check"></i><b>9.8</b> Problem 8</a></li>
+<li class="chapter" data-level="9.9" data-path="Summative1.html"><a href="Summative1.html#problem-9"><i class="fa fa-check"></i><b>9.9</b> Problem 9</a></li>
+<li class="chapter" data-level="9.10" data-path="Summative1.html"><a href="Summative1.html#problem-10"><i class="fa fa-check"></i><b>9.10</b> Problem 10</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="fdcs.html"><a href="fdcs.html"><i class="fa fa-check"></i><b>10</b> Flow Duration Curves</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="fdcs.html"><a href="fdcs.html#get-data"><i class="fa fa-check"></i><b>10.1</b> Get data</a></li>
+<li class="chapter" data-level="10.2" data-path="fdcs.html"><a href="fdcs.html#review-describe-the-distribution"><i class="fa fa-check"></i><b>10.2</b> Review: describe the distribution</a></li>
+<li class="chapter" data-level="10.3" data-path="fdcs.html"><a href="fdcs.html#ecdfs"><i class="fa fa-check"></i><b>10.3</b> ECDFs</a></li>
+<li class="chapter" data-level="10.4" data-path="fdcs.html"><a href="fdcs.html#calculate-flow-exceedence-probabilities"><i class="fa fa-check"></i><b>10.4</b> Calculate flow exceedence probabilities</a></li>
+<li class="chapter" data-level="10.5" data-path="fdcs.html"><a href="fdcs.html#plot-a-flow-duration-curve-using-the-probabilities"><i class="fa fa-check"></i><b>10.5</b> Plot a Flow Duration Curve using the probabilities</a></li>
+<li class="chapter" data-level="10.6" data-path="fdcs.html"><a href="fdcs.html#make-an-almost-fdc-with-stat_ecdf"><i class="fa fa-check"></i><b>10.6</b> Make an almost FDC with stat_ecdf</a></li>
+<li class="chapter" data-level="10.7" data-path="fdcs.html"><a href="fdcs.html#example-use-of-an-fdc"><i class="fa fa-check"></i><b>10.7</b> Example use of an FDC</a></li>
+<li class="chapter" data-level="10.8" data-path="fdcs.html"><a href="fdcs.html#compare-to-a-boxplot-of-the-same-data"><i class="fa fa-check"></i><b>10.8</b> Compare to a boxplot of the same data</a></li>
+<li class="chapter" data-level="10.9" data-path="fdcs.html"><a href="fdcs.html#challenge-examining-flow-regime-change-at-the-grand-canyon"><i class="fa fa-check"></i><b>10.9</b> Challenge: Examining flow regime change at the Grand Canyon</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="lfas.html"><a href="lfas.html"><i class="fa fa-check"></i><b>11</b> Low Flow Analysis</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="lfas.html"><a href="lfas.html#what-are-low-flow-statistics"><i class="fa fa-check"></i><b>11.1</b> What are low flow statistics?</a></li>
+<li class="chapter" data-level="11.2" data-path="lfas.html"><a href="lfas.html#get-data-1"><i class="fa fa-check"></i><b>11.2</b> Get data</a></li>
+<li class="chapter" data-level="11.3" data-path="lfas.html"><a href="lfas.html#create-the-x-days-average-flow-record"><i class="fa fa-check"></i><b>11.3</b> Create the X days average flow record</a></li>
+<li class="chapter" data-level="11.4" data-path="lfas.html"><a href="lfas.html#look-at-what-a-rolling-mean-does."><i class="fa fa-check"></i><b>11.4</b> Look at what a rolling mean does.</a></li>
+<li class="chapter" data-level="11.5" data-path="lfas.html"><a href="lfas.html#calculate-yearly-minimums"><i class="fa fa-check"></i><b>11.5</b> Calculate yearly minimums</a></li>
+<li class="chapter" data-level="11.6" data-path="lfas.html"><a href="lfas.html#calculate-return-interval"><i class="fa fa-check"></i><b>11.6</b> Calculate return interval</a></li>
+<li class="chapter" data-level="11.7" data-path="lfas.html"><a href="lfas.html#fit-to-pearson-type-iii-distribution"><i class="fa fa-check"></i><b>11.7</b> Fit to Pearson Type III distribution</a></li>
+<li class="chapter" data-level="11.8" data-path="lfas.html"><a href="lfas.html#distribution-free-method"><i class="fa fa-check"></i><b>11.8</b> Distribution-free method</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="floods.html"><a href="floods.html"><i class="fa fa-check"></i><b>12</b> Flood Frequency Analysis and Creating Functions</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="floods.html"><a href="floods.html#template-repository"><i class="fa fa-check"></i><b>12.1</b> Template Repository</a></li>
+<li class="chapter" data-level="12.2" data-path="floods.html"><a href="floods.html#intro"><i class="fa fa-check"></i><b>12.2</b> Intro</a></li>
+<li class="chapter" data-level="12.3" data-path="floods.html"><a href="floods.html#challenge-create-a-function"><i class="fa fa-check"></i><b>12.3</b> Challenge: Create a function</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="rgeospatial.html"><a href="rgeospatial.html"><i class="fa fa-check"></i><b>13</b> Geospatial data in R - Vector</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="rgeospatial.html"><a href="rgeospatial.html#goals"><i class="fa fa-check"></i><b>13.1</b> Goals</a></li>
+<li class="chapter" data-level="13.2" data-path="rgeospatial.html"><a href="rgeospatial.html#intro-to-tmap"><i class="fa fa-check"></i><b>13.2</b> Intro to tmap</a></li>
+<li class="chapter" data-level="13.3" data-path="rgeospatial.html"><a href="rgeospatial.html#data-wrangling-with-tidyverse-principles"><i class="fa fa-check"></i><b>13.3</b> Data wrangling with tidyverse principles</a></li>
+<li class="chapter" data-level="13.4" data-path="rgeospatial.html"><a href="rgeospatial.html#plot-maps-side-by-side"><i class="fa fa-check"></i><b>13.4</b> Plot maps side by side</a></li>
+<li class="chapter" data-level="13.5" data-path="rgeospatial.html"><a href="rgeospatial.html#built-in-styles-like-themes-in-ggplot"><i class="fa fa-check"></i><b>13.5</b> Built in styles, like themes in ggplot</a></li>
+<li class="chapter" data-level="13.6" data-path="rgeospatial.html"><a href="rgeospatial.html#interactive-maps"><i class="fa fa-check"></i><b>13.6</b> Interactive Maps</a>
+<ul>
+<li class="chapter" data-level="13.6.1" data-path="rgeospatial.html"><a href="rgeospatial.html#tmap"><i class="fa fa-check"></i><b>13.6.1</b> tmap</a></li>
+<li class="chapter" data-level="13.6.2" data-path="rgeospatial.html"><a href="rgeospatial.html#leaflet"><i class="fa fa-check"></i><b>13.6.2</b> Leaflet</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="summative2.html"><a href="summative2.html"><i class="fa fa-check"></i><b>14</b> Summative Assessment 2</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="summative2.html"><a href="summative2.html#info-for-assessment"><i class="fa fa-check"></i><b>14.1</b> Info for assessment</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="rgeoraster.html"><a href="rgeoraster.html"><i class="fa fa-check"></i><b>15</b> Geospatial R Raster - Hydro Analyses</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="rgeoraster.html"><a href="rgeoraster.html#introduction-2"><i class="fa fa-check"></i><b>15.1</b> Introduction</a></li>
+<li class="chapter" data-level="15.2" data-path="rgeoraster.html"><a href="rgeoraster.html#read-in-dem"><i class="fa fa-check"></i><b>15.2</b> Read in DEM</a></li>
+<li class="chapter" data-level="15.3" data-path="rgeoraster.html"><a href="rgeoraster.html#plot-dem"><i class="fa fa-check"></i><b>15.3</b> Plot DEM</a></li>
+<li class="chapter" data-level="15.4" data-path="rgeoraster.html"><a href="rgeoraster.html#generate-a-hillshade"><i class="fa fa-check"></i><b>15.4</b> Generate a hillshade</a>
+<ul>
+<li class="chapter" data-level="15.4.1" data-path="rgeoraster.html"><a href="rgeoraster.html#how-whitebox-tools-functions-work"><i class="fa fa-check"></i><b>15.4.1</b> How whitebox tools functions work</a></li>
+</ul></li>
+<li class="chapter" data-level="15.5" data-path="rgeoraster.html"><a href="rgeoraster.html#prepare-dem-for-hydrology-analyses"><i class="fa fa-check"></i><b>15.5</b> Prepare DEM for Hydrology Analyses</a></li>
+<li class="chapter" data-level="15.6" data-path="rgeoraster.html"><a href="rgeoraster.html#visualize-filled-sinks-and-breached-depressions"><i class="fa fa-check"></i><b>15.6</b> Visualize filled sinks and breached depressions</a></li>
+<li class="chapter" data-level="15.7" data-path="rgeoraster.html"><a href="rgeoraster.html#d8-flow-accumulation"><i class="fa fa-check"></i><b>15.7</b> D8 Flow Accumulation</a></li>
+<li class="chapter" data-level="15.8" data-path="rgeoraster.html"><a href="rgeoraster.html#d-infinity-flow-accumulation"><i class="fa fa-check"></i><b>15.8</b> D infinity flow accumulation</a></li>
+<li class="chapter" data-level="15.9" data-path="rgeoraster.html"><a href="rgeoraster.html#topographic-wetness-index"><i class="fa fa-check"></i><b>15.9</b> Topographic Wetness Index</a></li>
+<li class="chapter" data-level="15.10" data-path="rgeoraster.html"><a href="rgeoraster.html#downslope-twi"><i class="fa fa-check"></i><b>15.10</b> Downslope TWI</a></li>
+<li class="chapter" data-level="15.11" data-path="rgeoraster.html"><a href="rgeoraster.html#map-stream-network"><i class="fa fa-check"></i><b>15.11</b> Map Stream Network</a></li>
+<li class="chapter" data-level="15.12" data-path="rgeoraster.html"><a href="rgeoraster.html#extract-raster-values-to-point-locations"><i class="fa fa-check"></i><b>15.12</b> Extract raster values to point locations</a>
+<ul>
+<li class="chapter" data-level="15.12.1" data-path="rgeoraster.html"><a href="rgeoraster.html#import-and-plot-points"><i class="fa fa-check"></i><b>15.12.1</b> Import and plot points</a></li>
+<li class="chapter" data-level="15.12.2" data-path="rgeoraster.html"><a href="rgeoraster.html#extract-values-from-multiple-rasters-at-once"><i class="fa fa-check"></i><b>15.12.2</b> Extract values from multiple rasters at once</a></li>
+</ul></li>
+<li class="chapter" data-level="15.13" data-path="rgeoraster.html"><a href="rgeoraster.html#view-raster-data-as-a-pdf-or-histogram"><i class="fa fa-check"></i><b>15.13</b> View raster data as a PDF or histogram</a></li>
+<li class="chapter" data-level="15.14" data-path="rgeoraster.html"><a href="rgeoraster.html#subsetting-a-raster-for-visualization"><i class="fa fa-check"></i><b>15.14</b> Subsetting a raster for visualization</a></li>
+<li class="chapter" data-level="15.15" data-path="rgeoraster.html"><a href="rgeoraster.html#raster-math"><i class="fa fa-check"></i><b>15.15</b> Raster Math</a></li>
+<li class="chapter" data-level="15.16" data-path="rgeoraster.html"><a href="rgeoraster.html#extra-plot-topo-characteristics-against-one-another"><i class="fa fa-check"></i><b>15.16</b> Extra: plot topo characteristics against one another</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html"><i class="fa fa-check"></i><b>16</b> Geospatial R Raster - Watershed Delineation</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#introduction-3"><i class="fa fa-check"></i><b>16.1</b> Introduction</a></li>
+<li class="chapter" data-level="16.2" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#the-watershed-delineation-toolprocess"><i class="fa fa-check"></i><b>16.2</b> The watershed delineation tool/process</a></li>
+<li class="chapter" data-level="16.3" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#read-in-dem-1"><i class="fa fa-check"></i><b>16.3</b> Read in DEM</a></li>
+<li class="chapter" data-level="16.4" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#generate-a-hillshade-1"><i class="fa fa-check"></i><b>16.4</b> Generate a hillshade</a></li>
+<li class="chapter" data-level="16.5" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#prepare-dem-for-hydrology-analyses-1"><i class="fa fa-check"></i><b>16.5</b> Prepare DEM for Hydrology Analyses</a></li>
+<li class="chapter" data-level="16.6" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#create-flow-accumulation-and-pointer-grids"><i class="fa fa-check"></i><b>16.6</b> Create flow accumulation and pointer grids</a></li>
+<li class="chapter" data-level="16.7" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#setting-pour-points"><i class="fa fa-check"></i><b>16.7</b> Setting pour points</a></li>
+<li class="chapter" data-level="16.8" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#delineate-watersheds"><i class="fa fa-check"></i><b>16.8</b> Delineate watersheds</a></li>
+<li class="chapter" data-level="16.9" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#convert-watersheds-to-shapefiles"><i class="fa fa-check"></i><b>16.9</b> Convert watersheds to shapefiles</a></li>
+<li class="chapter" data-level="16.10" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#extract-data-based-on-watershed-outline"><i class="fa fa-check"></i><b>16.10</b> Extract data based on watershed outline</a></li>
+<li class="chapter" data-level="16.11" data-path="rgeowatersheds.html"><a href="rgeowatersheds.html#bonus-make-a-3d-map-of-your-watershed-with-rayshader"><i class="fa fa-check"></i><b>16.11</b> BONUS: Make a 3d map of your watershed with rayshader</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="modelingintro.html"><a href="modelingintro.html"><i class="fa fa-check"></i><b>17</b> Intro to Modeling - Getting Started with HBV</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="modelingintro.html"><a href="modelingintro.html#introduction-4"><i class="fa fa-check"></i><b>17.1</b> Introduction</a></li>
+<li class="chapter" data-level="17.2" data-path="modelingintro.html"><a href="modelingintro.html#creating-the-hbv-model-function"><i class="fa fa-check"></i><b>17.2</b> Creating the HBV model function</a></li>
+<li class="chapter" data-level="17.3" data-path="modelingintro.html"><a href="modelingintro.html#read-in-precip-and-temp"><i class="fa fa-check"></i><b>17.3</b> Read in Precip and Temp</a></li>
+<li class="chapter" data-level="17.4" data-path="modelingintro.html"><a href="modelingintro.html#calculate-pet"><i class="fa fa-check"></i><b>17.4</b> Calculate PET</a></li>
+<li class="chapter" data-level="17.5" data-path="modelingintro.html"><a href="modelingintro.html#hbv-parameters"><i class="fa fa-check"></i><b>17.5</b> HBV Parameters</a></li>
+<li class="chapter" data-level="17.6" data-path="modelingintro.html"><a href="modelingintro.html#first-model-run"><i class="fa fa-check"></i><b>17.6</b> First model run</a></li>
+<li class="chapter" data-level="17.7" data-path="modelingintro.html"><a href="modelingintro.html#import-observed-streamflow-data"><i class="fa fa-check"></i><b>17.7</b> Import observed streamflow data</a></li>
+<li class="chapter" data-level="17.8" data-path="modelingintro.html"><a href="modelingintro.html#compare-observed-and-modeled-discharge-graphically"><i class="fa fa-check"></i><b>17.8</b> Compare observed and modeled discharge graphically</a></li>
+<li class="chapter" data-level="17.9" data-path="modelingintro.html"><a href="modelingintro.html#compare-observed-and-modelled-discharge-with-interactive-graph"><i class="fa fa-check"></i><b>17.9</b> Compare observed and modelled discharge with interactive graph</a></li>
+<li class="chapter" data-level="17.10" data-path="modelingintro.html"><a href="modelingintro.html#measure-how-well-the-model-fits-with-nse"><i class="fa fa-check"></i><b>17.10</b> Measure how well the model fits with NSE</a></li>
+<li class="chapter" data-level="17.11" data-path="modelingintro.html"><a href="modelingintro.html#assess-model-fit-with-a-different-measure-snow"><i class="fa fa-check"></i><b>17.11</b> Assess model fit with a different measure: Snow</a></li>
+<li class="chapter" data-level="17.12" data-path="modelingintro.html"><a href="modelingintro.html#calibrate-hbv-manually"><i class="fa fa-check"></i><b>17.12</b> Calibrate HBV manually</a></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="modelingcalibration.html"><a href="modelingcalibration.html"><i class="fa fa-check"></i><b>18</b> Intro to Modeling - Calibrate HBV</a>
+<ul>
+<li class="chapter" data-level="18.1" data-path="modelingcalibration.html"><a href="modelingcalibration.html#introduction-5"><i class="fa fa-check"></i><b>18.1</b> Introduction</a></li>
+<li class="chapter" data-level="18.2" data-path="modelingcalibration.html"><a href="modelingcalibration.html#challenge-write-a-for-loop"><i class="fa fa-check"></i><b>18.2</b> Challenge: Write a for loop</a></li>
+<li class="chapter" data-level="18.3" data-path="modelingcalibration.html"><a href="modelingcalibration.html#prep-data-for-hbv"><i class="fa fa-check"></i><b>18.3</b> Prep data for HBV</a></li>
+<li class="chapter" data-level="18.4" data-path="modelingcalibration.html"><a href="modelingcalibration.html#calculate-pet-1"><i class="fa fa-check"></i><b>18.4</b> Calculate PET</a></li>
+<li class="chapter" data-level="18.5" data-path="modelingcalibration.html"><a href="modelingcalibration.html#monte-carlo-step-1-generate-random-parameter-sets"><i class="fa fa-check"></i><b>18.5</b> Monte Carlo step 1: generate random parameter sets</a></li>
+<li class="chapter" data-level="18.6" data-path="modelingcalibration.html"><a href="modelingcalibration.html#run-the-model-for-each-parameter-set"><i class="fa fa-check"></i><b>18.6</b> Run the model for each parameter set</a></li>
+<li class="chapter" data-level="18.7" data-path="modelingcalibration.html"><a href="modelingcalibration.html#find-the-best-parameter-set"><i class="fa fa-check"></i><b>18.7</b> Find the best parameter set</a></li>
+<li class="chapter" data-level="18.8" data-path="modelingcalibration.html"><a href="modelingcalibration.html#investigating-a-much-bigger-monte-carlo"><i class="fa fa-check"></i><b>18.8</b> Investigating a much bigger Monte Carlo</a></li>
+</ul></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Hydroinformatics at VT</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="modelingcalibration" class="section level1 hasAnchor" number="18">
+<h1><span class="header-section-number">Chapter 18</span> Intro to Modeling - Calibrate HBV<a href="modelingcalibration.html#modelingcalibration" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="introduction-5" class="section level2 hasAnchor" number="18.1">
+<h2><span class="header-section-number">18.1</span> Introduction<a href="modelingcalibration.html#introduction-5" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The following activity is available as a template github repository at the following link: <a href="https://github.com/VT-Hydroinformatics/17-calibrate-model-for-loops" class="uri">https://github.com/VT-Hydroinformatics/17-calibrate-model-for-loops</a></p>
+<p><em>Goals for this activity:</em></p>
+<ul>
+<li>Learn how for loops work</li>
+<li>Use for loops to calibrate the HBV model using the Monte Carlo technique</li>
+<li>Assess the results of the calibration, discuss equifinality</li>
+</ul>
+<p>We saw in the last activity that coming up with the parameters that create a model that fits our watershed discharge best is hard. For this reason, there are several ways people have devised for automating the process. We are going to explore one: a Monte Carlo calibration.</p>
+<p>To use this approach, we will create a ton of random parameter sets, run the model for each, and then see which one fits best. The idea is that by creating a bunch of random sets of parameters, we will end up with at least one that works well. As you might guess, this can take a while. We will just do this for 100 or 1000 runs here in this activity, but we will also explore some output from a 100,000 run Monte Carlo that I ran and saved.</p>
+<p>There is one new package this time, GGally, just for creating a parallel coordinate plot to look at the results of the 100k run Monte Carlo at the end.</p>
+<div class="sourceCode" id="cb292"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb292-1"><a href="modelingcalibration.html#cb292-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb292-2"><a href="modelingcalibration.html#cb292-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb292-3"><a href="modelingcalibration.html#cb292-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plotly)</span>
+<span id="cb292-4"><a href="modelingcalibration.html#cb292-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally) <span class="co">#for making parallel coordinate plot</span></span>
+<span id="cb292-5"><a href="modelingcalibration.html#cb292-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb292-6"><a href="modelingcalibration.html#cb292-6" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_classic</span>())</span></code></pre></div>
+<p>In order to do what we are going to do, we need “for” loops.</p>
+<p>A for loop is a way to run a chunk of code several times while changing a value in that chunk of code each time.</p>
+<p>So using an example from class: you could run some code that downloads data from a USGS gage, and each time through the loop it changes which gage you download.</p>
+<p>In R, the syntax for this is</p>
+<blockquote>
+<p>for(x in sequence){<br />
+x<br />
+}<br />
+</p>
+</blockquote>
+<p>Where x will change every time you go through the loop. The values x will have each time through the loop are those that are in “sequence” above. If you changed this to x in 1:3, x would have values of 1, 2, and 3 each time through. If you made it x in c(2,3,5) x would change to 2, then 3, and then 5 each time through the loop. You can make the sequence anything and x can have any name so “letter in c(a, b, c)” would have <em>letter</em> change to a, then b, then c each time through the loop.</p>
+<p>The image below shows a short example of how a for loop works.</p>
+<p><img src="images/for%20loop.png" title="for loop" alt="for loop" />
+Let’s try some examples</p>
+<div class="sourceCode" id="cb293"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb293-1"><a href="modelingcalibration.html#cb293-1" aria-hidden="true" tabindex="-1"></a>val <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb293-2"><a href="modelingcalibration.html#cb293-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb293-3"><a href="modelingcalibration.html#cb293-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>){</span>
+<span id="cb293-4"><a href="modelingcalibration.html#cb293-4" aria-hidden="true" tabindex="-1"></a>  val[x] <span class="ot">&lt;-</span> x</span>
+<span id="cb293-5"><a href="modelingcalibration.html#cb293-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb293-6"><a href="modelingcalibration.html#cb293-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb293-7"><a href="modelingcalibration.html#cb293-7" aria-hidden="true" tabindex="-1"></a>val</span></code></pre></div>
+<pre><code>##  [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
+<div class="sourceCode" id="cb295"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb295-1"><a href="modelingcalibration.html#cb295-1" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;mon&quot;</span>,<span class="st">&quot;tues&quot;</span>,<span class="st">&quot;wednes&quot;</span>)</span>
+<span id="cb295-2"><a href="modelingcalibration.html#cb295-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-3"><a href="modelingcalibration.html#cb295-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(days)){</span>
+<span id="cb295-4"><a href="modelingcalibration.html#cb295-4" aria-hidden="true" tabindex="-1"></a>  days[x] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(days[x], <span class="st">&quot;day&quot;</span>)</span>
+<span id="cb295-5"><a href="modelingcalibration.html#cb295-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb295-6"><a href="modelingcalibration.html#cb295-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-7"><a href="modelingcalibration.html#cb295-7" aria-hidden="true" tabindex="-1"></a>days</span></code></pre></div>
+<pre><code>## [1] &quot;monday&quot;    &quot;tuesday&quot;   &quot;wednesday&quot;</code></pre>
+<div class="sourceCode" id="cb297"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb297-1"><a href="modelingcalibration.html#cb297-1" aria-hidden="true" tabindex="-1"></a>gages <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;123&quot;</span>,<span class="st">&quot;ABC&quot;</span>,<span class="st">&quot;001&quot;</span>)</span>
+<span id="cb297-2"><a href="modelingcalibration.html#cb297-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb297-3"><a href="modelingcalibration.html#cb297-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(g <span class="cf">in</span> gages){</span>
+<span id="cb297-4"><a href="modelingcalibration.html#cb297-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(g)</span>
+<span id="cb297-5"><a href="modelingcalibration.html#cb297-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>## [1] &quot;123&quot;
+## [1] &quot;ABC&quot;
+## [1] &quot;001&quot;</code></pre>
+</div>
+<div id="challenge-write-a-for-loop" class="section level2 hasAnchor" number="18.2">
+<h2><span class="header-section-number">18.2</span> Challenge: Write a for loop<a href="modelingcalibration.html#challenge-write-a-for-loop" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Define a vector with values 5, 6, 7, 8, 9</p>
+<p>Create a for loop that steps through this vector and adds 1 to each value.</p>
+<p>Yes, you can do this by just typing the name of the vector + 1, but that’s not the point!</p>
+</div>
+<div id="prep-data-for-hbv" class="section level2 hasAnchor" number="18.3">
+<h2><span class="header-section-number">18.3</span> Prep data for HBV<a href="modelingcalibration.html#prep-data-for-hbv" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Since we did this in the last chapter, we are just going to quickly run the code the preps our data to go into the model. Below we load the HBV movdel and make vectors of P, Qobs, and Temp.</p>
+<div class="sourceCode" id="cb299"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb299-1"><a href="modelingcalibration.html#cb299-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Create the HBV function with the HBV R file</span></span>
+<span id="cb299-2"><a href="modelingcalibration.html#cb299-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&#39;HBV/HBV.R&#39;</span>)</span>
+<span id="cb299-3"><a href="modelingcalibration.html#cb299-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb299-4"><a href="modelingcalibration.html#cb299-4" aria-hidden="true" tabindex="-1"></a><span class="co">#set start and end dates for model to filter data</span></span>
+<span id="cb299-5"><a href="modelingcalibration.html#cb299-5" aria-hidden="true" tabindex="-1"></a>start <span class="ot">&lt;-</span> <span class="fu">mdy</span>(<span class="st">&quot;01-01-2009&quot;</span>)</span>
+<span id="cb299-6"><a href="modelingcalibration.html#cb299-6" aria-hidden="true" tabindex="-1"></a>end <span class="ot">&lt;-</span> <span class="fu">mdy</span>(<span class="st">&quot;12-31-2012&quot;</span>)</span>
+<span id="cb299-7"><a href="modelingcalibration.html#cb299-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb299-8"><a href="modelingcalibration.html#cb299-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Precip</span></span>
+<span id="cb299-9"><a href="modelingcalibration.html#cb299-9" aria-hidden="true" tabindex="-1"></a>P1 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;HBV/Pwd2009-2012.csv&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb299-10"><a href="modelingcalibration.html#cb299-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">select</span>(DATE, WS_3) <span class="sc">%&gt;%</span></span>
+<span id="cb299-11"><a href="modelingcalibration.html#cb299-11" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">DATE =</span> <span class="fu">ymd</span>(DATE)) <span class="sc">%&gt;%</span></span>
+<span id="cb299-12"><a href="modelingcalibration.html#cb299-12" aria-hidden="true" tabindex="-1"></a>         <span class="fu">filter</span>(DATE <span class="sc">&gt;=</span> start <span class="sc">&amp;</span> DATE <span class="sc">&lt;=</span> end)</span></code></pre></div>
+<pre><code>## Rows: 1461 Columns: 10
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## dbl (10): DATE, WS_1, WS_2, WS_3, WS_4, WS_5, WS_6, WS_7, WS_8, WS_9
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<div class="sourceCode" id="cb301"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb301-1"><a href="modelingcalibration.html#cb301-1" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> P1<span class="sc">$</span>WS_3</span>
+<span id="cb301-2"><a href="modelingcalibration.html#cb301-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb301-3"><a href="modelingcalibration.html#cb301-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Streamflow mm/d</span></span>
+<span id="cb301-4"><a href="modelingcalibration.html#cb301-4" aria-hidden="true" tabindex="-1"></a>Qobs1 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;HBV/SWD2009-2012.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb301-5"><a href="modelingcalibration.html#cb301-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">select</span>(DATE, WS_3) <span class="sc">%&gt;%</span></span>
+<span id="cb301-6"><a href="modelingcalibration.html#cb301-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">DATE =</span> <span class="fu">ymd</span>(DATE)) <span class="sc">%&gt;%</span></span>
+<span id="cb301-7"><a href="modelingcalibration.html#cb301-7" aria-hidden="true" tabindex="-1"></a>         <span class="fu">filter</span>(DATE <span class="sc">&gt;=</span> start <span class="sc">&amp;</span> DATE <span class="sc">&lt;=</span> end)</span></code></pre></div>
+<pre><code>## Rows: 1461 Columns: 10
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## dbl (10): DATE, WS_1, WS_2, WS_3, WS_4, WS_5, WS_6, WS_7, WS_8, WS_9
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<div class="sourceCode" id="cb303"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb303-1"><a href="modelingcalibration.html#cb303-1" aria-hidden="true" tabindex="-1"></a>Qobs <span class="ot">&lt;-</span> Qobs1<span class="sc">$</span>WS_3</span>
+<span id="cb303-2"><a href="modelingcalibration.html#cb303-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb303-3"><a href="modelingcalibration.html#cb303-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Temp in deg C</span></span>
+<span id="cb303-4"><a href="modelingcalibration.html#cb303-4" aria-hidden="true" tabindex="-1"></a>Temp1 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;HBV/Tdm2009-2012.csv&quot;</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb303-5"><a href="modelingcalibration.html#cb303-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">select</span>(DATE, STA_1) <span class="sc">%&gt;%</span></span>
+<span id="cb303-6"><a href="modelingcalibration.html#cb303-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">DATE =</span> <span class="fu">ymd</span>(DATE)) <span class="sc">%&gt;%</span></span>
+<span id="cb303-7"><a href="modelingcalibration.html#cb303-7" aria-hidden="true" tabindex="-1"></a>         <span class="fu">filter</span>(DATE <span class="sc">&gt;=</span> start <span class="sc">&amp;</span> DATE <span class="sc">&lt;=</span> end)</span></code></pre></div>
+<pre><code>## Rows: 1461 Columns: 9
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## dbl (9): DATE, STA_1, STA_6, STA_14, STA_INT, STA_HQ, STA_23, STA_17, STA_24
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<div class="sourceCode" id="cb305"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb305-1"><a href="modelingcalibration.html#cb305-1" aria-hidden="true" tabindex="-1"></a>Temp <span class="ot">&lt;-</span> Temp1<span class="sc">$</span>STA_1</span>
+<span id="cb305-2"><a href="modelingcalibration.html#cb305-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb305-3"><a href="modelingcalibration.html#cb305-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Snow in SWE, mm</span></span>
+<span id="cb305-4"><a href="modelingcalibration.html#cb305-4" aria-hidden="true" tabindex="-1"></a>snow <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;HBV/sno2009-2012.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb305-5"><a href="modelingcalibration.html#cb305-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">select</span>(DATE, STA2) <span class="sc">%&gt;%</span></span>
+<span id="cb305-6"><a href="modelingcalibration.html#cb305-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">DATE =</span> <span class="fu">ymd</span>(DATE)) <span class="sc">%&gt;%</span></span>
+<span id="cb305-7"><a href="modelingcalibration.html#cb305-7" aria-hidden="true" tabindex="-1"></a>         <span class="fu">filter</span>(DATE <span class="sc">&gt;=</span> start <span class="sc">&amp;</span> DATE <span class="sc">&lt;=</span> end)</span></code></pre></div>
+<pre><code>## New names:
+## Rows: 76 Columns: 25
+## ── Column specification
+## ──────────────────────────────────────────────────────── Delimiter: &quot;,&quot; chr
+## (1): DATE dbl (21): STA1, STA2, STA3, STA4, STA5, STA6, STA7, STA8, STA9,
+## STA10, STA11... lgl (3): ...23, ...24, ...25
+## ℹ Use `spec()` to retrieve the full column specification for this data. ℹ
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## • `` -&gt; `...23`
+## • `` -&gt; `...24`
+## • `` -&gt; `...25`</code></pre>
+<pre><code>## Warning: 8 failed to parse.</code></pre>
+</div>
+<div id="calculate-pet-1" class="section level2 hasAnchor" number="18.4">
+<h2><span class="header-section-number">18.4</span> Calculate PET<a href="modelingcalibration.html#calculate-pet-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Again, because we did this last time, we will just re-run this code to create our PET values.</p>
+<div class="sourceCode" id="cb308"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb308-1"><a href="modelingcalibration.html#cb308-1" aria-hidden="true" tabindex="-1"></a>lat <span class="ot">&lt;-</span> <span class="dv">43</span> <span class="sc">+</span> <span class="dv">57</span><span class="sc">/</span><span class="dv">60</span> <span class="co">#43 degrees and 57 minutes</span></span>
+<span id="cb308-2"><a href="modelingcalibration.html#cb308-2" aria-hidden="true" tabindex="-1"></a>latrad <span class="ot">&lt;-</span> (lat<span class="sc">/</span><span class="dv">360</span>) <span class="sc">*</span> <span class="dv">2</span> <span class="sc">*</span> pi <span class="co">#convert to radians</span></span>
+<span id="cb308-3"><a href="modelingcalibration.html#cb308-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb308-4"><a href="modelingcalibration.html#cb308-4" aria-hidden="true" tabindex="-1"></a>PET1 <span class="ot">&lt;-</span> <span class="fu">select</span>(Temp1, DATE) <span class="sc">%&gt;%</span></span>
+<span id="cb308-5"><a href="modelingcalibration.html#cb308-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">DOY =</span> <span class="fu">yday</span>(DATE)) <span class="sc">%&gt;%</span> <span class="co">#DOY for dates</span></span>
+<span id="cb308-6"><a href="modelingcalibration.html#cb308-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">tempvar =</span> (<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">/</span> <span class="dv">365</span>) <span class="sc">*</span> DOY) <span class="sc">%&gt;%</span></span>
+<span id="cb308-7"><a href="modelingcalibration.html#cb308-7" aria-hidden="true" tabindex="-1"></a>         <span class="co">#declination of the sun above the celestial equator in </span></span>
+<span id="cb308-8"><a href="modelingcalibration.html#cb308-8" aria-hidden="true" tabindex="-1"></a>         <span class="co">#radians on day JulDay of the year</span></span>
+<span id="cb308-9"><a href="modelingcalibration.html#cb308-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">delta_h =</span> <span class="fl">0.4093</span> <span class="sc">*</span> <span class="fu">sin</span>(tempvar <span class="sc">-</span> <span class="fl">1.405</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb308-10"><a href="modelingcalibration.html#cb308-10" aria-hidden="true" tabindex="-1"></a>         <span class="co">#day length in h</span></span>
+<span id="cb308-11"><a href="modelingcalibration.html#cb308-11" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(<span class="at">daylen =</span> (<span class="dv">2</span> <span class="sc">*</span> <span class="fu">acos</span>(<span class="sc">-</span><span class="fu">tan</span>(delta_h) <span class="sc">*</span> <span class="fu">tan</span>(latrad)) <span class="sc">/</span> <span class="fl">0.2618</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb308-12"><a href="modelingcalibration.html#cb308-12" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mutate</span>(</span>
+<span id="cb308-13"><a href="modelingcalibration.html#cb308-13" aria-hidden="true" tabindex="-1"></a>           <span class="at">PET =</span> <span class="fl">29.8</span> <span class="sc">*</span> daylen <span class="sc">*</span> <span class="fl">0.611</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="fl">17.3</span> <span class="sc">*</span> Temp <span class="sc">/</span> </span>
+<span id="cb308-14"><a href="modelingcalibration.html#cb308-14" aria-hidden="true" tabindex="-1"></a>                  (Temp <span class="sc">+</span> <span class="fl">237.3</span>)) <span class="sc">/</span> (Temp <span class="sc">+</span> <span class="fl">273.2</span>))  <span class="co">#PET Hamon method</span></span>
+<span id="cb308-15"><a href="modelingcalibration.html#cb308-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb308-16"><a href="modelingcalibration.html#cb308-16" aria-hidden="true" tabindex="-1"></a>PET <span class="ot">&lt;-</span> PET1<span class="sc">$</span>PET</span></code></pre></div>
+</div>
+<div id="monte-carlo-step-1-generate-random-parameter-sets" class="section level2 hasAnchor" number="18.5">
+<h2><span class="header-section-number">18.5</span> Monte Carlo step 1: generate random parameter sets<a href="modelingcalibration.html#monte-carlo-step-1-generate-random-parameter-sets" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Below is a table of the parameters for the HBV model and their suggested min and max values for our application. What we basically want to do is mimic you sitting down at the computer and randomly changing all the parameters, running the model, and checking to see how well it did. Over, and over, and over.</p>
+<p>You can do this by generating the set of parameters each time you run the model, but we are going to do it separately so we can see the Nashe-Sutcliff efficiency (NSE) for each set of parameters.</p>
+<table>
+<colgroup>
+<col width="32%" />
+<col width="17%" />
+<col width="14%" />
+<col width="35%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Object Name</th>
+<th>Min</th>
+<th>Max</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>FC</td>
+<td>40</td>
+<td>400</td>
+<td>Max soil moisture storage, field capacity</td>
+</tr>
+<tr class="even">
+<td>beta</td>
+<td>1</td>
+<td>6</td>
+<td>Shape coefficient governing fate of water input to soil moisture storage</td>
+</tr>
+<tr class="odd">
+<td>LP</td>
+<td>.3</td>
+<td>1</td>
+<td>Threshold for reduction of evaporation</td>
+</tr>
+<tr class="even">
+<td>SFCF</td>
+<td>0.4</td>
+<td>1.2</td>
+<td>Snowfall correction factor</td>
+</tr>
+<tr class="odd">
+<td>TT</td>
+<td>-1.5</td>
+<td>1.2</td>
+<td>Threshold temperature</td>
+</tr>
+<tr class="even">
+<td>CFMAX</td>
+<td>1</td>
+<td>8</td>
+<td>Degree-day factor</td>
+</tr>
+<tr class="odd">
+<td>k0</td>
+<td>0.05</td>
+<td>0.5</td>
+<td>Recession constant (upper storage, near surface)</td>
+</tr>
+<tr class="even">
+<td>k1</td>
+<td>0.01</td>
+<td>0.3</td>
+<td>Recession constant (upper storage)</td>
+</tr>
+<tr class="odd">
+<td>k2</td>
+<td>0.001</td>
+<td>0.15</td>
+<td>Recession constant (lower storage)</td>
+</tr>
+<tr class="even">
+<td>UZL</td>
+<td>0</td>
+<td>70</td>
+<td>Threshold for shallow storage</td>
+</tr>
+<tr class="odd">
+<td>PERC</td>
+<td>0</td>
+<td>4</td>
+<td>Percolation, max flow from upper to lower storage</td>
+</tr>
+<tr class="even">
+<td>MAXBAS</td>
+<td>1</td>
+<td>3</td>
+<td>base of the triangular routing function, days”</td>
+</tr>
+</tbody>
+</table>
+<p>To make our parameter sets, we first have to decide how many model runs we want to try. Let’s try 100 so we don’t burn down anyone’s computer.</p>
+<p>Then we will use the runif() function to generate the same number of random values as the number of model runs we want to perform for each parameter, within the bounds of the min and max values above.</p>
+<p>Remember, runif() creates a set of random numbers in a uniform distribution with a specified length with a specified minimum and maximum value. A uniform distribution is one where each number has the same probability of occurrence as the next, so it’s basically a set of random numbers between your min and max values.</p>
+<p>We will also create a blank vector of the same length which we will populate with the NSE values for each model run, and then slap them all together with cbind() (column bind).</p>
+<div class="sourceCode" id="cb309"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb309-1"><a href="modelingcalibration.html#cb309-1" aria-hidden="true" tabindex="-1"></a><span class="co">#number of runs</span></span>
+<span id="cb309-2"><a href="modelingcalibration.html#cb309-2" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb309-3"><a href="modelingcalibration.html#cb309-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb309-4"><a href="modelingcalibration.html#cb309-4" aria-hidden="true" tabindex="-1"></a><span class="co"># PARAMETERS RANGE and generate set</span></span>
+<span id="cb309-5"><a href="modelingcalibration.html#cb309-5" aria-hidden="true" tabindex="-1"></a>FC    <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="dv">40</span>   , <span class="at">max =</span> <span class="dv">400</span>)  <span class="co">#Max soil moisture storage, field capacity</span></span>
+<span id="cb309-6"><a href="modelingcalibration.html#cb309-6" aria-hidden="true" tabindex="-1"></a>beta  <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="dv">1</span>    , <span class="at">max =</span> <span class="dv">6</span>)    <span class="co">#Shape coefficient governing fate of water input to soil moisture storage</span></span>
+<span id="cb309-7"><a href="modelingcalibration.html#cb309-7" aria-hidden="true" tabindex="-1"></a>LP    <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="fl">0.3</span>   , <span class="at">max =</span> <span class="dv">1</span>)    <span class="co">#Threshold for reduction of evap</span></span>
+<span id="cb309-8"><a href="modelingcalibration.html#cb309-8" aria-hidden="true" tabindex="-1"></a>SFCF  <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="fl">0.4</span>  , <span class="at">max =</span> <span class="fl">1.2</span>)  <span class="co">#Snowfall correction factor</span></span>
+<span id="cb309-9"><a href="modelingcalibration.html#cb309-9" aria-hidden="true" tabindex="-1"></a>TT    <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="sc">-</span><span class="fl">1.5</span> , <span class="at">max =</span> <span class="fl">1.2</span>)  <span class="co">#Threshold temperature</span></span>
+<span id="cb309-10"><a href="modelingcalibration.html#cb309-10" aria-hidden="true" tabindex="-1"></a>CFMAX <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="dv">1</span>    , <span class="at">max =</span> <span class="dv">8</span>)    <span class="co">#Degree-day factor</span></span>
+<span id="cb309-11"><a href="modelingcalibration.html#cb309-11" aria-hidden="true" tabindex="-1"></a>k0    <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="fl">0.05</span> , <span class="at">max =</span> <span class="fl">0.5</span>)  <span class="co">#Recession constant (upper storage, near surface)</span></span>
+<span id="cb309-12"><a href="modelingcalibration.html#cb309-12" aria-hidden="true" tabindex="-1"></a>k1    <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="fl">0.01</span> , <span class="at">max =</span> <span class="fl">0.3</span>)  <span class="co">#Recession constant (upper storage)</span></span>
+<span id="cb309-13"><a href="modelingcalibration.html#cb309-13" aria-hidden="true" tabindex="-1"></a>k2    <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="fl">0.001</span>, <span class="at">max =</span> <span class="fl">0.15</span>) <span class="co">#Recession constant (lower storage)</span></span>
+<span id="cb309-14"><a href="modelingcalibration.html#cb309-14" aria-hidden="true" tabindex="-1"></a>UZL   <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="dv">0</span>    , <span class="at">max =</span> <span class="dv">70</span>)   <span class="co">#Threshold for shallow storage</span></span>
+<span id="cb309-15"><a href="modelingcalibration.html#cb309-15" aria-hidden="true" tabindex="-1"></a>PERC  <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="dv">0</span>    , <span class="at">max =</span> <span class="dv">4</span>)    <span class="co">#Percolation, max flow from upper to lower storage</span></span>
+<span id="cb309-16"><a href="modelingcalibration.html#cb309-16" aria-hidden="true" tabindex="-1"></a>MAXBAS<span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, N)   <span class="co">#base of the triangular routing function, days</span></span>
+<span id="cb309-17"><a href="modelingcalibration.html#cb309-17" aria-hidden="true" tabindex="-1"></a><span class="co">#MAXBAS is just 1&#39;s because routing will be set to zero, so the parameter isn&#39;t used</span></span>
+<span id="cb309-18"><a href="modelingcalibration.html#cb309-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb309-19"><a href="modelingcalibration.html#cb309-19" aria-hidden="true" tabindex="-1"></a>NSE <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, N) <span class="co">#create NSE column, to be filled in for loop</span></span>
+<span id="cb309-20"><a href="modelingcalibration.html#cb309-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb309-21"><a href="modelingcalibration.html#cb309-21" aria-hidden="true" tabindex="-1"></a>routing <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb309-22"><a href="modelingcalibration.html#cb309-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb309-23"><a href="modelingcalibration.html#cb309-23" aria-hidden="true" tabindex="-1"></a>pars <span class="ot">&lt;-</span> <span class="fu">cbind</span>(FC, beta, LP, SFCF, </span>
+<span id="cb309-24"><a href="modelingcalibration.html#cb309-24" aria-hidden="true" tabindex="-1"></a>               TT, CFMAX, k0, k1, </span>
+<span id="cb309-25"><a href="modelingcalibration.html#cb309-25" aria-hidden="true" tabindex="-1"></a>               k2, UZL, PERC, MAXBAS, NSE) </span></code></pre></div>
+</div>
+<div id="run-the-model-for-each-parameter-set" class="section level2 hasAnchor" number="18.6">
+<h2><span class="header-section-number">18.6</span> Run the model for each parameter set<a href="modelingcalibration.html#run-the-model-for-each-parameter-set" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Alright, let’s get at this. We now have our random sets of parameters. So we will run the model for each and see how it does.</p>
+<p>Here’s how we will do that:</p>
+<p>First: Define the period for which we want to calculate NSE. Remember we are going to drop the first 40% of the model run to let the model “warm up”. Since we are starting with nothing in the storages we need to let the boxes
+“fill up” and settle in.</p>
+<p>Then we run a FOR LOOP!</p>
+<p>Our for loop will step through a sequence of numbers from 1 to the total number of parameter sets we have. So in this case: 100. We will use i as our variable. So i will be 1, 2, 3…. all the way to 100.</p>
+<p>In the code portion of the loop, it will grab the parameters from row i of the parameter set we created. And pass that to the HBV function with the Precip, Temp, and PET data. Remember routing is just set to zero.</p>
+<p>After we run the model (still in the for loop) we will stick our observed values onto the results and then trip them to the period we want to evaluate. (drop the first 40%)</p>
+<p>Finally, we calculate NSE for that individual model run, and then add it into the NSE column we made before. So each run will just tack on an NSE value to the end of the paramter set. We don’t need to save the model results, because we can just rerun the model with the same parameters and it’ll give us the same output.</p>
+<p>The figure below illustrates how the for loop will work:</p>
+<div class="figure">
+<img src="images/monte%20carlo%20for%20loop.png" title="Monte Carlo for loop" alt="" />
+<p class="caption">monte carlo for loop</p>
+</div>
+<div class="sourceCode" id="cb310"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb310-1"><a href="modelingcalibration.html#cb310-1" aria-hidden="true" tabindex="-1"></a><span class="co">#trim the first 40% (warm up) of Qobs off for NSE calculation </span></span>
+<span id="cb310-2"><a href="modelingcalibration.html#cb310-2" aria-hidden="true" tabindex="-1"></a>EvalStart <span class="ot">&lt;-</span> <span class="fu">floor</span>(<span class="fu">length</span>(Qobs) <span class="sc">*</span> <span class="fl">0.4</span>)</span>
+<span id="cb310-3"><a href="modelingcalibration.html#cb310-3" aria-hidden="true" tabindex="-1"></a>EvalEnd <span class="ot">&lt;-</span> <span class="fu">length</span>(Qobs)</span>
+<span id="cb310-4"><a href="modelingcalibration.html#cb310-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb310-5"><a href="modelingcalibration.html#cb310-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb310-6"><a href="modelingcalibration.html#cb310-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N){</span>
+<span id="cb310-7"><a href="modelingcalibration.html#cb310-7" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb310-8"><a href="modelingcalibration.html#cb310-8" aria-hidden="true" tabindex="-1"></a>   <span class="co">#call model with i parameter set generated above</span></span>
+<span id="cb310-9"><a href="modelingcalibration.html#cb310-9" aria-hidden="true" tabindex="-1"></a>   results <span class="ot">&lt;-</span> <span class="fu">HBV</span>(pars[i,<span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>], P, Temp, PET, routing)</span>
+<span id="cb310-10"><a href="modelingcalibration.html#cb310-10" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb310-11"><a href="modelingcalibration.html#cb310-11" aria-hidden="true" tabindex="-1"></a>   <span class="co">#add the Qobs to results</span></span>
+<span id="cb310-12"><a href="modelingcalibration.html#cb310-12" aria-hidden="true" tabindex="-1"></a>   results <span class="ot">&lt;-</span> <span class="fu">cbind</span>(results, Qobs)</span>
+<span id="cb310-13"><a href="modelingcalibration.html#cb310-13" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb310-14"><a href="modelingcalibration.html#cb310-14" aria-hidden="true" tabindex="-1"></a>   <span class="co">#trim the first 40% of the record so it isn&#39;t included in the NSE calculation</span></span>
+<span id="cb310-15"><a href="modelingcalibration.html#cb310-15" aria-hidden="true" tabindex="-1"></a>   results <span class="ot">&lt;-</span> results[EvalStart<span class="sc">:</span>EvalEnd,]</span>
+<span id="cb310-16"><a href="modelingcalibration.html#cb310-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb310-17"><a href="modelingcalibration.html#cb310-17" aria-hidden="true" tabindex="-1"></a>   <span class="co">#Calculate NSE and add to parameter set</span></span>
+<span id="cb310-18"><a href="modelingcalibration.html#cb310-18" aria-hidden="true" tabindex="-1"></a>   pars[i,<span class="dv">13</span>]  <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> ((<span class="fu">sum</span>((results<span class="sc">$</span>Qobs <span class="sc">-</span> results<span class="sc">$</span>q) <span class="sc">^</span> <span class="dv">2</span>)) <span class="sc">/</span> <span class="fu">sum</span>((results<span class="sc">$</span>Qobs <span class="sc">-</span> <span class="fu">mean</span>(results<span class="sc">$</span>Qobs)) <span class="sc">^</span> <span class="dv">2</span>))</span>
+<span id="cb310-19"><a href="modelingcalibration.html#cb310-19" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb310-20"><a href="modelingcalibration.html#cb310-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="find-the-best-parameter-set" class="section level2 hasAnchor" number="18.7">
+<h2><span class="header-section-number">18.7</span> Find the best parameter set<a href="modelingcalibration.html#find-the-best-parameter-set" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Alright, now we have a NSE value that tells us how well each parameter set did at estimating runoff. So we need to find the best one!</p>
+<p>To do this, we will convert the parameter sets to a tibble, use filter to grab the row with the maximum NSE, then use slice to pull just that row out of the tibble. Finally, we will run as.numeric on the data to be sure everything is numbers.</p>
+<p>Now we have our best parameter set, let’s see how it did!</p>
+<p>We will do what we did in the previous lesson: run the model with the parameter set, slap on the observed data, and filter it to the time period we want to look at. (after 08-07-2010 in this case, that’s the 40% cutoff in this case)</p>
+<div class="sourceCode" id="cb311"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb311-1"><a href="modelingcalibration.html#cb311-1" aria-hidden="true" tabindex="-1"></a><span class="co">#find best parameters</span></span>
+<span id="cb311-2"><a href="modelingcalibration.html#cb311-2" aria-hidden="true" tabindex="-1"></a>pars <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(pars)</span>
+<span id="cb311-3"><a href="modelingcalibration.html#cb311-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb311-4"><a href="modelingcalibration.html#cb311-4" aria-hidden="true" tabindex="-1"></a>bestparams <span class="ot">&lt;-</span> pars <span class="sc">%&gt;%</span> <span class="fu">filter</span>(NSE <span class="sc">==</span> <span class="fu">max</span>(NSE)) <span class="sc">%&gt;%</span></span>
+<span id="cb311-5"><a href="modelingcalibration.html#cb311-5" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">slice</span>(<span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb311-6"><a href="modelingcalibration.html#cb311-6" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">as.numeric</span>()</span>
+<span id="cb311-7"><a href="modelingcalibration.html#cb311-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb311-8"><a href="modelingcalibration.html#cb311-8" aria-hidden="true" tabindex="-1"></a><span class="co">#run with best parameters</span></span>
+<span id="cb311-9"><a href="modelingcalibration.html#cb311-9" aria-hidden="true" tabindex="-1"></a>modeloutput <span class="ot">&lt;-</span>  <span class="fu">HBV</span>(bestparams, P, Temp, PET, routing)</span>
+<span id="cb311-10"><a href="modelingcalibration.html#cb311-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb311-11"><a href="modelingcalibration.html#cb311-11" aria-hidden="true" tabindex="-1"></a><span class="co">#add observations for plotting</span></span>
+<span id="cb311-12"><a href="modelingcalibration.html#cb311-12" aria-hidden="true" tabindex="-1"></a>modeloutput <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(modeloutput, Qobs1)</span>
+<span id="cb311-13"><a href="modelingcalibration.html#cb311-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb311-14"><a href="modelingcalibration.html#cb311-14" aria-hidden="true" tabindex="-1"></a><span class="co">#trim out warm up period for plotting</span></span>
+<span id="cb311-15"><a href="modelingcalibration.html#cb311-15" aria-hidden="true" tabindex="-1"></a>OutputTrim <span class="ot">&lt;-</span> <span class="fu">filter</span>(modeloutput, DATE <span class="sc">&gt;=</span> <span class="fu">mdy</span>(<span class="st">&quot;08-07-2010&quot;</span>))</span></code></pre></div>
+<p>Below we will look at the model run using plotly. First, we calculate the NSE again, just to be sure, and then plot the same way we did in the last lesson.</p>
+<p>How did the model do? Did the 100 run Monte Carlo do better or worse than your manual attempts from last lesson?</p>
+<div class="sourceCode" id="cb312"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb312-1"><a href="modelingcalibration.html#cb312-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Calculate NSE</span></span>
+<span id="cb312-2"><a href="modelingcalibration.html#cb312-2" aria-hidden="true" tabindex="-1"></a>NSE <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> ((<span class="fu">sum</span>((OutputTrim<span class="sc">$</span>q <span class="sc">-</span> OutputTrim<span class="sc">$</span>WS_3) <span class="sc">^</span> <span class="dv">2</span>)) <span class="sc">/</span> </span>
+<span id="cb312-3"><a href="modelingcalibration.html#cb312-3" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">sum</span>((OutputTrim<span class="sc">$</span>WS_3 <span class="sc">-</span> <span class="fu">mean</span>(OutputTrim<span class="sc">$</span>WS_3)) <span class="sc">^</span> <span class="dv">2</span>))</span>
+<span id="cb312-4"><a href="modelingcalibration.html#cb312-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb312-5"><a href="modelingcalibration.html#cb312-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Create plot with NSE in title</span></span>
+<span id="cb312-6"><a href="modelingcalibration.html#cb312-6" aria-hidden="true" tabindex="-1"></a>OutputTrim <span class="sc">%&gt;%</span> <span class="fu">plot_ly</span>(<span class="at">x =</span> <span class="sc">~</span>DATE) <span class="sc">%&gt;%</span> </span>
+<span id="cb312-7"><a href="modelingcalibration.html#cb312-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">add_trace</span>(<span class="at">y =</span> <span class="sc">~</span>q, <span class="at">name =</span> <span class="st">&#39;Modeled&#39;</span>,  <span class="at">type =</span> <span class="st">&#39;scatter&#39;</span>, <span class="at">mode =</span> <span class="st">&#39;lines&#39;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb312-8"><a href="modelingcalibration.html#cb312-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">add_trace</span>(<span class="at">y =</span> <span class="sc">~</span>WS_3, <span class="at">name =</span> <span class="st">&#39;Measured&#39;</span>, <span class="at">type =</span> <span class="st">&#39;scatter&#39;</span>, <span class="at">mode =</span> <span class="st">&#39;lines&#39;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb312-9"><a href="modelingcalibration.html#cb312-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">layout</span>(<span class="at">title=</span><span class="fu">paste</span>(<span class="st">&quot;NSE: &quot;</span>, <span class="fu">round</span>(NSE,<span class="dv">2</span>)))</span></code></pre></div>
+<div id="htmlwidget-40730426b235151e3012" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-40730426b235151e3012">{"x":{"visdat":{"11ce451dd88e2":["function () ","plotlyVisDat"]},"cur_data":"11ce451dd88e2","attrs":{"11ce451dd88e2":{"x":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"y":{},"name":"Modeled","type":"scatter","mode":"lines","inherit":true},"11ce451dd88e2.1":{"x":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"y":{},"name":"Measured","type":"scatter","mode":"lines","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"NSE:  0.72","xaxis":{"domain":[0,1],"automargin":true,"title":"DATE"},"yaxis":{"domain":[0,1],"automargin":true,"title":"q"},"hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":["2010-08-07","2010-08-08","2010-08-09","2010-08-10","2010-08-11","2010-08-12","2010-08-13","2010-08-14","2010-08-15","2010-08-16","2010-08-17","2010-08-18","2010-08-19","2010-08-20","2010-08-21","2010-08-22","2010-08-23","2010-08-24","2010-08-25","2010-08-26","2010-08-27","2010-08-28","2010-08-29","2010-08-30","2010-08-31","2010-09-01","2010-09-02","2010-09-03","2010-09-04","2010-09-05","2010-09-06","2010-09-07","2010-09-08","2010-09-09","2010-09-10","2010-09-11","2010-09-12","2010-09-13","2010-09-14","2010-09-15","2010-09-16","2010-09-17","2010-09-18","2010-09-19","2010-09-20","2010-09-21","2010-09-22","2010-09-23","2010-09-24","2010-09-25","2010-09-26","2010-09-27","2010-09-28","2010-09-29","2010-09-30","2010-10-01","2010-10-02","2010-10-03","2010-10-04","2010-10-05","2010-10-06","2010-10-07","2010-10-08","2010-10-09","2010-10-10","2010-10-11","2010-10-12","2010-10-13","2010-10-14","2010-10-15","2010-10-16","2010-10-17","2010-10-18","2010-10-19","2010-10-20","2010-10-21","2010-10-22","2010-10-23","2010-10-24","2010-10-25","2010-10-26","2010-10-27","2010-10-28","2010-10-29","2010-10-30","2010-10-31","2010-11-01","2010-11-02","2010-11-03","2010-11-04","2010-11-05","2010-11-06","2010-11-07","2010-11-08","2010-11-09","2010-11-10","2010-11-11","2010-11-12","2010-11-13","2010-11-14","2010-11-15","2010-11-16","2010-11-17","2010-11-18","2010-11-19","2010-11-20","2010-11-21","2010-11-22","2010-11-23","2010-11-24","2010-11-25","2010-11-26","2010-11-27","2010-11-28","2010-11-29","2010-11-30","2010-12-01","2010-12-02","2010-12-03","2010-12-04","2010-12-05","2010-12-06","2010-12-07","2010-12-08","2010-12-09","2010-12-10","2010-12-11","2010-12-12","2010-12-13","2010-12-14","2010-12-15","2010-12-16","2010-12-17","2010-12-18","2010-12-19","2010-12-20","2010-12-21","2010-12-22","2010-12-23","2010-12-24","2010-12-25","2010-12-26","2010-12-27","2010-12-28","2010-12-29","2010-12-30","2010-12-31","2011-01-01","2011-01-02","2011-01-03","2011-01-04","2011-01-05","2011-01-06","2011-01-07","2011-01-08","2011-01-09","2011-01-10","2011-01-11","2011-01-12","2011-01-13","2011-01-14","2011-01-15","2011-01-16","2011-01-17","2011-01-18","2011-01-19","2011-01-20","2011-01-21","2011-01-22","2011-01-23","2011-01-24","2011-01-25","2011-01-26","2011-01-27","2011-01-28","2011-01-29","2011-01-30","2011-01-31","2011-02-01","2011-02-02","2011-02-03","2011-02-04","2011-02-05","2011-02-06","2011-02-07","2011-02-08","2011-02-09","2011-02-10","2011-02-11","2011-02-12","2011-02-13","2011-02-14","2011-02-15","2011-02-16","2011-02-17","2011-02-18","2011-02-19","2011-02-20","2011-02-21","2011-02-22","2011-02-23","2011-02-24","2011-02-25","2011-02-26","2011-02-27","2011-02-28","2011-03-01","2011-03-02","2011-03-03","2011-03-04","2011-03-05","2011-03-06","2011-03-07","2011-03-08","2011-03-09","2011-03-10","2011-03-11","2011-03-12","2011-03-13","2011-03-14","2011-03-15","2011-03-16","2011-03-17","2011-03-18","2011-03-19","2011-03-20","2011-03-21","2011-03-22","2011-03-23","2011-03-24","2011-03-25","2011-03-26","2011-03-27","2011-03-28","2011-03-29","2011-03-30","2011-03-31","2011-04-01","2011-04-02","2011-04-03","2011-04-04","2011-04-05","2011-04-06","2011-04-07","2011-04-08","2011-04-09","2011-04-10","2011-04-11","2011-04-12","2011-04-13","2011-04-14","2011-04-15","2011-04-16","2011-04-17","2011-04-18","2011-04-19","2011-04-20","2011-04-21","2011-04-22","2011-04-23","2011-04-24","2011-04-25","2011-04-26","2011-04-27","2011-04-28","2011-04-29","2011-04-30","2011-05-01","2011-05-02","2011-05-03","2011-05-04","2011-05-05","2011-05-06","2011-05-07","2011-05-08","2011-05-09","2011-05-10","2011-05-11","2011-05-12","2011-05-13","2011-05-14","2011-05-15","2011-05-16","2011-05-17","2011-05-18","2011-05-19","2011-05-20","2011-05-21","2011-05-22","2011-05-23","2011-05-24","2011-05-25","2011-05-26","2011-05-27","2011-05-28","2011-05-29","2011-05-30","2011-05-31","2011-06-01","2011-06-02","2011-06-03","2011-06-04","2011-06-05","2011-06-06","2011-06-07","2011-06-08","2011-06-09","2011-06-10","2011-06-11","2011-06-12","2011-06-13","2011-06-14","2011-06-15","2011-06-16","2011-06-17","2011-06-18","2011-06-19","2011-06-20","2011-06-21","2011-06-22","2011-06-23","2011-06-24","2011-06-25","2011-06-26","2011-06-27","2011-06-28","2011-06-29","2011-06-30","2011-07-01","2011-07-02","2011-07-03","2011-07-04","2011-07-05","2011-07-06","2011-07-07","2011-07-08","2011-07-09","2011-07-10","2011-07-11","2011-07-12","2011-07-13","2011-07-14","2011-07-15","2011-07-16","2011-07-17","2011-07-18","2011-07-19","2011-07-20","2011-07-21","2011-07-22","2011-07-23","2011-07-24","2011-07-25","2011-07-26","2011-07-27","2011-07-28","2011-07-29","2011-07-30","2011-07-31","2011-08-01","2011-08-02","2011-08-03","2011-08-04","2011-08-05","2011-08-06","2011-08-07","2011-08-08","2011-08-09","2011-08-10","2011-08-11","2011-08-12","2011-08-13","2011-08-14","2011-08-15","2011-08-16","2011-08-17","2011-08-18","2011-08-19","2011-08-20","2011-08-21","2011-08-22","2011-08-23","2011-08-24","2011-08-25","2011-08-26","2011-08-27","2011-08-28","2011-08-29","2011-08-30","2011-08-31","2011-09-01","2011-09-02","2011-09-03","2011-09-04","2011-09-05","2011-09-06","2011-09-07","2011-09-08","2011-09-09","2011-09-10","2011-09-11","2011-09-12","2011-09-13","2011-09-14","2011-09-15","2011-09-16","2011-09-17","2011-09-18","2011-09-19","2011-09-20","2011-09-21","2011-09-22","2011-09-23","2011-09-24","2011-09-25","2011-09-26","2011-09-27","2011-09-28","2011-09-29","2011-09-30","2011-10-01","2011-10-02","2011-10-03","2011-10-04","2011-10-05","2011-10-06","2011-10-07","2011-10-08","2011-10-09","2011-10-10","2011-10-11","2011-10-12","2011-10-13","2011-10-14","2011-10-15","2011-10-16","2011-10-17","2011-10-18","2011-10-19","2011-10-20","2011-10-21","2011-10-22","2011-10-23","2011-10-24","2011-10-25","2011-10-26","2011-10-27","2011-10-28","2011-10-29","2011-10-30","2011-10-31","2011-11-01","2011-11-02","2011-11-03","2011-11-04","2011-11-05","2011-11-06","2011-11-07","2011-11-08","2011-11-09","2011-11-10","2011-11-11","2011-11-12","2011-11-13","2011-11-14","2011-11-15","2011-11-16","2011-11-17","2011-11-18","2011-11-19","2011-11-20","2011-11-21","2011-11-22","2011-11-23","2011-11-24","2011-11-25","2011-11-26","2011-11-27","2011-11-28","2011-11-29","2011-11-30","2011-12-01","2011-12-02","2011-12-03","2011-12-04","2011-12-05","2011-12-06","2011-12-07","2011-12-08","2011-12-09","2011-12-10","2011-12-11","2011-12-12","2011-12-13","2011-12-14","2011-12-15","2011-12-16","2011-12-17","2011-12-18","2011-12-19","2011-12-20","2011-12-21","2011-12-22","2011-12-23","2011-12-24","2011-12-25","2011-12-26","2011-12-27","2011-12-28","2011-12-29","2011-12-30","2011-12-31","2012-01-01","2012-01-02","2012-01-03","2012-01-04","2012-01-05","2012-01-06","2012-01-07","2012-01-08","2012-01-09","2012-01-10","2012-01-11","2012-01-12","2012-01-13","2012-01-14","2012-01-15","2012-01-16","2012-01-17","2012-01-18","2012-01-19","2012-01-20","2012-01-21","2012-01-22","2012-01-23","2012-01-24","2012-01-25","2012-01-26","2012-01-27","2012-01-28","2012-01-29","2012-01-30","2012-01-31","2012-02-01","2012-02-02","2012-02-03","2012-02-04","2012-02-05","2012-02-06","2012-02-07","2012-02-08","2012-02-09","2012-02-10","2012-02-11","2012-02-12","2012-02-13","2012-02-14","2012-02-15","2012-02-16","2012-02-17","2012-02-18","2012-02-19","2012-02-20","2012-02-21","2012-02-22","2012-02-23","2012-02-24","2012-02-25","2012-02-26","2012-02-27","2012-02-28","2012-02-29","2012-03-01","2012-03-02","2012-03-03","2012-03-04","2012-03-05","2012-03-06","2012-03-07","2012-03-08","2012-03-09","2012-03-10","2012-03-11","2012-03-12","2012-03-13","2012-03-14","2012-03-15","2012-03-16","2012-03-17","2012-03-18","2012-03-19","2012-03-20","2012-03-21","2012-03-22","2012-03-23","2012-03-24","2012-03-25","2012-03-26","2012-03-27","2012-03-28","2012-03-29","2012-03-30","2012-03-31","2012-04-01","2012-04-02","2012-04-03","2012-04-04","2012-04-05","2012-04-06","2012-04-07","2012-04-08","2012-04-09","2012-04-10","2012-04-11","2012-04-12","2012-04-13","2012-04-14","2012-04-15","2012-04-16","2012-04-17","2012-04-18","2012-04-19","2012-04-20","2012-04-21","2012-04-22","2012-04-23","2012-04-24","2012-04-25","2012-04-26","2012-04-27","2012-04-28","2012-04-29","2012-04-30","2012-05-01","2012-05-02","2012-05-03","2012-05-04","2012-05-05","2012-05-06","2012-05-07","2012-05-08","2012-05-09","2012-05-10","2012-05-11","2012-05-12","2012-05-13","2012-05-14","2012-05-15","2012-05-16","2012-05-17","2012-05-18","2012-05-19","2012-05-20","2012-05-21","2012-05-22","2012-05-23","2012-05-24","2012-05-25","2012-05-26","2012-05-27","2012-05-28","2012-05-29","2012-05-30","2012-05-31","2012-06-01","2012-06-02","2012-06-03","2012-06-04","2012-06-05","2012-06-06","2012-06-07","2012-06-08","2012-06-09","2012-06-10","2012-06-11","2012-06-12","2012-06-13","2012-06-14","2012-06-15","2012-06-16","2012-06-17","2012-06-18","2012-06-19","2012-06-20","2012-06-21","2012-06-22","2012-06-23","2012-06-24","2012-06-25","2012-06-26","2012-06-27","2012-06-28","2012-06-29","2012-06-30","2012-07-01","2012-07-02","2012-07-03","2012-07-04","2012-07-05","2012-07-06","2012-07-07","2012-07-08","2012-07-09","2012-07-10","2012-07-11","2012-07-12","2012-07-13","2012-07-14","2012-07-15","2012-07-16","2012-07-17","2012-07-18","2012-07-19","2012-07-20","2012-07-21","2012-07-22","2012-07-23","2012-07-24","2012-07-25","2012-07-26","2012-07-27","2012-07-28","2012-07-29","2012-07-30","2012-07-31","2012-08-01","2012-08-02","2012-08-03","2012-08-04","2012-08-05","2012-08-06","2012-08-07","2012-08-08","2012-08-09","2012-08-10","2012-08-11","2012-08-12","2012-08-13","2012-08-14","2012-08-15","2012-08-16","2012-08-17","2012-08-18","2012-08-19","2012-08-20","2012-08-21","2012-08-22","2012-08-23","2012-08-24","2012-08-25","2012-08-26","2012-08-27","2012-08-28","2012-08-29","2012-08-30","2012-08-31","2012-09-01","2012-09-02","2012-09-03","2012-09-04","2012-09-05","2012-09-06","2012-09-07","2012-09-08","2012-09-09","2012-09-10","2012-09-11","2012-09-12","2012-09-13","2012-09-14","2012-09-15","2012-09-16","2012-09-17","2012-09-18","2012-09-19","2012-09-20","2012-09-21","2012-09-22","2012-09-23","2012-09-24","2012-09-25","2012-09-26","2012-09-27","2012-09-28","2012-09-29","2012-09-30","2012-10-01","2012-10-02","2012-10-03","2012-10-04","2012-10-05","2012-10-06","2012-10-07","2012-10-08","2012-10-09","2012-10-10","2012-10-11","2012-10-12","2012-10-13","2012-10-14","2012-10-15","2012-10-16","2012-10-17","2012-10-18","2012-10-19","2012-10-20","2012-10-21","2012-10-22","2012-10-23","2012-10-24","2012-10-25","2012-10-26","2012-10-27","2012-10-28","2012-10-29","2012-10-30","2012-10-31","2012-11-01","2012-11-02","2012-11-03","2012-11-04","2012-11-05","2012-11-06","2012-11-07","2012-11-08","2012-11-09","2012-11-10","2012-11-11","2012-11-12","2012-11-13","2012-11-14","2012-11-15","2012-11-16","2012-11-17","2012-11-18","2012-11-19","2012-11-20","2012-11-21","2012-11-22","2012-11-23","2012-11-24","2012-11-25","2012-11-26","2012-11-27","2012-11-28","2012-11-29","2012-11-30","2012-12-01","2012-12-02","2012-12-03","2012-12-04","2012-12-05","2012-12-06","2012-12-07","2012-12-08","2012-12-09","2012-12-10","2012-12-11","2012-12-12","2012-12-13","2012-12-14","2012-12-15","2012-12-16","2012-12-17","2012-12-18","2012-12-19","2012-12-20","2012-12-21","2012-12-22","2012-12-23","2012-12-24","2012-12-25","2012-12-26","2012-12-27","2012-12-28","2012-12-29","2012-12-30","2012-12-31"],"y":[0.983743385069591,0.938633669521428,1.32480443051922,0.993389548108384,0.947837506159438,0.904374260624417,0.862904029398453,0.823335422480934,1.9311735926229,1.23702834473713,0.935600992066758,0.892698853908314,0.851764000387416,0.812706221341793,0.775439443211074,1.78875066222937,1.40384562435696,0.924515389351738,2.02149781392492,1.52250666364733,1.05153579316314,1.00331744553486,0.957310158208212,0.913412542647539,0.871527859505257,0.831563805432558,0.793432309665948,0.806395461777202,0.836496520403694,0.804290354232493,0.767409487079325,0.732219798186361,0.737289908499712,0.708017071001597,0.724443734257002,0.691224247062513,0.680930156550713,0.721002216303719,0.712175907632474,0.684342682630644,1.95014269194365,1.57238839289837,0.950392778807842,0.838277723497052,0.799838359907696,0.763161639690265,0.747310390470269,0.71304234897496,0.736109719596127,0.702355286715371,0.670148668934416,1.61045780332578,4.40684450006708,3.10146123764402,19.552158976446,31.1290046020929,9.47668330341668,4.63337397061541,3.32520298341588,2.34022255120953,2.60301591751044,2.52270908660118,2.23482791761188,1.54364908584586,1.28158557840554,1.2228182598447,1.16674572639148,1.1132444082293,1.11424805703648,13.1588922118435,5.67657838827498,4.27640632344638,3.08864996837055,2.19356926948248,1.52052193819818,2.25438784491664,1.57982461556926,1.37149359142784,1.81402955823799,2.91446040074446,3.0449789484792,4.98328927057916,3.67452864632653,2.94178987162677,2.13343562976,1.77755911816264,1.55610564549917,1.49772342324785,1.44203613151226,4.58397536055559,6.8058055092809,4.8893536923757,3.60969894056824,3.25617285621503,2.37825449596902,1.71561461329954,1.55673526101371,1.48535090827099,1.41723989682407,1.3522521270667,1.29024438223489,1.25152268466749,9.15604646643119,4.82745230738858,3.52390310998068,2.54008453253211,1.79889015919879,1.41119940667574,2.6125036101875,1.86371065558332,1.45951708671211,1.39259068942344,1.32873321314626,1.26780393200026,1.20966857311362,1.15419902071928,16.0677990064015,7.20699609761794,4.55590657112895,3.30775522019987,2.36647796290385,1.65803602924609,1.35521912019595,1.29307532340371,1.23378114068658,1.17720590252005,1.12322493125228,20.706961981611,16.9980745724968,5.67333275448002,4.1515306316498,3.00257714836853,2.13657452751764,1.4852350286938,1.33760963893274,1.27627332781491,1.21774960338309,1.16190949400984,1.10862994208301,1.05779353281759,1.00928823550297,0.963007156615287,0.918848304250868,0.876714363361663,0.83651248129723,0.798154063180765,1.28843044983103,3.62406802355192,4.02140737306274,2.84153948408966,1.95489943137023,1.29060007273439,1.08455850381363,1.03482589432939,0.9873737818745,0.942097593880695,0.898897552972099,0.857678457080905,0.818349469645863,0.780823919431257,0.745019109525212,0.710856135096417,0.678259709507647,0.64715799840287,0.617482461402327,0.589167701056702,0.562151318727531,0.536373777076229,0.511778268858717,0.488310591736481,0.465919028828203,0.444554234738706,0.424169126814066,0.404718781383238,0.386160334757541,0.368452888769821,0.351557420645143,0.335436697004367,0.320055191811108,0.305379008081252,0.291375803182496,0.278014717559287,0.265266306726095,0.253102476379139,0.284096599136915,0.271069302618565,0.258639374935648,0.246779423641464,0.23546331237448,0.224666103260348,0.214364001955065,0.20453430520821,0.195155350830661,0.186206469956559,0.177667941494308,2.68490865026084,1.68996889008658,0.950076331061609,0.482126763563161,0.46001876111804,0.438924524779784,0.418797568135976,0.399593536416322,0.381270108745853,0.363786904880318,0.347105396218243,0.331188820893541,0.316002102761573,0.301511774100113,0.287685901854867,0.274494017267026,25.9934940225964,7.41925293930749,3.90982406585595,2.66835100749014,1.73895822265836,4.87152155072458,4.26283102632634,3.62280979424502,2.51351557262152,1.68165080899061,1.06007041775607,2.84364277715032,5.51922334940238,4.00438998097224,2.86210922955481,2.00249123975388,1.35725718743196,1.21536434696679,1.15963361392082,1.1064584228517,1.05572158895962,1.00731130097313,0.961120874745123,0.917048518147688,0.874997106747772,0.834873969769255,0.796590685869772,0.773889847603512,1.39731542131329,3.64017448073751,6.83137358437646,5.09718454249136,4.72820985710293,5.43282790255056,11.5412855225875,24.3786684626696,38.1688838832123,24.7947806049235,17.6087126277646,11.0458980402236,5.08209434687451,3.72499275754063,16.9897884342439,12.6615345216088,12.23421244568,13.9885774643257,8.56170873850257,9.57412870108919,15.6910370217915,6.07215817616544,7.67407444271879,18.6393936413489,6.58353082856268,6.67481854547113,4.95433146619946,3.69357833700291,2.73891561026119,2.01666751515069,1.71138331553427,4.61168922221777,3.66693171878472,2.72352488599052,2.00960623426091,1.72513070284581,1.64602454927988,1.57054582146302,1.49852818318783,1.42981292562122,1.36424861754986,2.63060009385515,9.53507109803637,5.23013590035098,4.48536317410634,4.3950726014742,6.07283486230549,5.11412356788473,7.09288548745754,5.00438400363986,5.49082123104226,4.08668202880196,3.02374210358513,2.84369592974943,2.32649178259839,1.71432973969923,1.63571886608393,1.66072134093208,1.58026366648948,1.50780041482411,1.45720011972874,1.39037996734412,1.32662386409335,1.26579130749687,1.20774823783955,1.15236674273666,1.10591504757021,1.13659424622046,1.08447552916595,2.07498072009583,1.83951402914275,2.83743355072734,2.36933305156108,1.78819237694391,1.31043570545083,1.32809148689738,1.34803460582926,1.30782615889974,1.24785557418242,1.19063495054125,1.3059142906151,2.26669679482104,3.8638482813688,2.90304803680854,2.52960630746696,1.83168171353692,1.42453626013866,1.35921391443531,1.30767569404538,1.25806445854051,1.20037570481943,1.20401733911893,1.14880692499364,1.09612819353507,1.59238744090356,1.15378580478051,1.10514662504614,1.33682633473582,1.12368206421832,1.07215543740408,1.02299157258043,0.985621585281219,0.94042574455186,0.897302366570616,0.856156418215567,0.816897224124309,0.91557166561047,0.840054150889878,0.801533328928757,0.764778885626665,0.729709823398186,0.696248858815573,0.664322252295437,0.69365736134874,0.689037416536524,0.65744149189424,0.627294403599652,0.670926252086939,0.646549730816955,0.616902086027118,0.588613938890268,0.577661786664488,0.557359613049897,0.548782489082756,0.52361797732486,0.505281485027169,0.56594462578695,0.547272034785091,0.565394537586097,0.770897266344219,0.624909486740022,0.596254158919752,0.568912825893785,1.4552469332645,4.77900467660313,5.18015721534096,3.68323877123268,2.60217581199193,1.7791140356506,1.13235017442888,5.13350305718012,4.42264185730248,3.16968399556885,2.22644314015408,2.68392993210957,1.87366811644691,1.71819299257369,50.7720862489639,16.9122509906445,5.79013354285681,4.26834842670983,3.11812051803514,2.24992129131737,1.59574085144207,2.80971105850396,5.76373679940835,5.76653004736438,9.74237939717939,6.92863849759446,4.84816313820218,3.60169563988529,2.65840131498121,1.94528156503064,1.65683716300729,1.58086262100049,3.73688102147752,2.74946028976554,2.00334826434312,1.62109513995222,1.54675955432124,1.53434690994993,1.46398917874633,2.68449398052509,2.47904724867091,2.26348946742319,1.61831045159855,1.50247565411578,1.43357938461719,1.36784236494593,5.29743025716924,12.9318244316819,8.62967351122373,19.9132773270737,7.57423396669228,4.97980919754923,4.04511915256441,2.97588207414598,2.16796357868952,1.61551067210811,1.5414311631733,1.47074858236702,1.40330716298838,1.33895828104431,1.56241354279251,13.8050097382848,8.1686925015648,5.81268174094997,4.57420193417741,3.36383136116358,3.14345230425068,3.66197785653601,2.68539317113223,2.07018135445875,1.60366496136682,1.61156028003622,1.53766191698293,1.46715217558381,2.40414723759197,2.055104245837,2.70857658155908,2.77719267042179,2.01377678956598,1.58033640420461,1.50786981713929,1.43872619740354,1.37275316978112,1.30980534624655,1.24974400556626,1.1924367875918,1.1377574015712,1.0855853478358,3.05119137232779,2.28077151654943,1.55960934946681,1.20864162283329,1.58331242478654,1.26030206653907,2.08138151833337,1.65577748306973,1.31820720245442,1.25776059326878,1.20008577333997,1.14505564181341,1.09834327588122,5.69519243749981,4.14787630571641,3.04025717335804,2.14675599555444,1.47536938228088,1.26626497594704,1.64222203189843,5.84184580290103,4.37052740137856,3.18582671997502,2.29189081190219,1.61859037488358,1.41791524213119,1.90247921472449,4.44533118058799,3.26301480751373,2.3699571629435,1.69643351434496,1.50280543443983,1.48584341879581,1.84826980676672,1.50514474947731,5.40975282100427,4.36594700701677,3.21813446151102,2.35058458333812,1.69576607440728,1.55852234421357,1.48705604447529,2.89334387245233,2.09115649552315,1.54838169769535,1.47738039897955,1.40963487655381,1.34499583625814,1.28332082984092,1.22447394103865,1.16832548605058,1.25992261792724,3.66171944435316,2.62347448650258,1.84190538915641,1.33663345738099,1.27534190922959,1.21686089515098,1.16106153764062,1.10782086889328,1.05702155981273,1.00855166144787,0.962304358285244,0.918177732854431,0.876074541127464,0.835901998217351,0.797571573903435,0.760998797532959,0.726103071868915,0.692807495473921,0.661038693238719,0.630726654681816,0.60180457966392,0.574208731177172,0.547878294884742,0.522755245101271,0.498784216918794,0.491971599510049,9.70119490302558,5.25447075840329,3.71394862398345,2.55624413522743,1.68881389141468,2.15056972198871,1.40329335263412,0.958011315596808,0.914081548348171,0.872166187838891,0.832172863114929,0.794013438907609,0.757603821405574,0.722863772933086,0.689716735126293,0.658089660217775,0.627912850057561,0.59911980251587,0.571647064929075,0.545434094265929,1.11429183161038,2.92326829492708,2.49264788675713,1.6373429917554,0.999257827314882,0.843432417475615,2.22837948191563,2.70181332422653,4.84515272706291,3.47505395135233,2.44352860872114,1.66881298216837,1.16705649352547,1.11354092508498,1.06247932188216,1.01375915693536,2.63176554378636,1.936530574067,1.28535078134493,1.11838232734013,1.82003416444722,9.18796090526967,9.10734080164194,4.78315736054809,4.44236462398277,13.0516381914463,17.6073603088263,6.57270656006575,4.9597122457556,5.12989723722163,3.78257251531162,2.76416979512672,1.99543547941848,1.54412536293724,1.4733192391554,1.40575994188476,1.34129858735892,1.31819547084759,1.81539247395652,1.9107501812838,1.39783244265965,1.41438059214031,1.44084196820768,1.40245454677001,1.33814476168358,1.30370720110484,1.24392549187813,1.18688508281072,1.13246027113062,1.08053111818726,1.0309831851367,0.983707280747091,0.956612536900818,2.61334023288382,1.78004476347862,1.15634337329588,1.05950714843724,1.0109232729951,0.964567219192919,0.920336829901104,0.878134632422134,0.837867623685144,0.799447065290458,0.762788287952387,0.727810504909334,1.86268329923486,4.08810799431533,12.4947245317709,5.26391563524393,3.78405538857633,4.60374461912622,3.7915410685307,2.69365865642646,1.8680825510745,1.2490075409247,3.85470469395737,3.04598056000733,2.56899380696946,4.45210057809335,3.40253160833013,2.45666987854743,1.74391098171927,5.12311902838929,4.72921140223921,8.4993446777001,5.61179372818926,4.16678342041051,3.07333183527159,2.68418513591719,20.4016790451037,12.0394953062263,5.89379152506825,4.40484519097595,3.27692010218618,2.42314002642824,2.05968175597853,1.92368752140742,1.7088613956773,1.63050127388112,1.99731357149422,1.62505425022843,1.55053711894123,1.50820593750934,16.602415181152,5.96603678683531,4.43440188498772,3.27520432713762,18.6512857868854,9.56018171990919,6.17204078081556,4.69919536880505,4.94544126312357,3.83890486225459,4.3794214647965,3.27915532492176,2.42985068383351,1.78738586362366,3.99668015232529,6.97109122229279,5.00285033129845,3.75237730148138,2.80451941646177,2.08648183372198,1.79720043636021,1.7147895132499,1.63615755664243,1.5611312814041,1.48954534841966,1.42124200022632,1.35607071335584,4.86494179463303,3.67078537450141,3.19666147508356,2.3091016767333,1.64023399545841,1.45508322010975,1.41368294597248,1.35572638268083,1.2935593252835,2.47545279960386,1.73776543032597,1.35459601200108,1.29248078793812,1.23321386774305,1.17666464197112,1.1227084902953,1.07122650687424,1.02210523831361,0.975236433643219,0.930516805759023,0.906477194649025,0.879906240210266,0.909985407715971,0.870128450496804,0.830228566555528,0.792158298388357,0.755833748661512,0.721174867167319,0.744565309466704,0.798065966691956,0.761470519858433,0.776584067080325,0.753268933802548,0.843540253618385,1.4273962636766,0.911600216607065,0.869798637974971,0.899552130713169,0.858303019051448,0.818945392223999,0.781392515881059,1.29166476560989,0.867192038977864,0.827426804672216,0.789485011759373,3.47157624375617,24.5982352736276,11.2648363049239,5.68148616760348,4.11125460704362,2.92763604594395,3.17788862981754,2.23604412934361,1.83916302234046,1.26111001897261,1.20328161057445,1.14810493340319,1.09545839188505,1.04522596623139,0.997296956760172,0.951565739941552,0.907931535630125,0.86629818497071,1.74727668707941,3.47920092929714,2.43135791529762,1.64494692128008,1.13660276786725,1.0686571941592,1.61355303660507,1.13564785859859,1.7712129270192,2.97921893185852,2.09913809969296,1.43800502412796,3.5206741938322,2.53212680738313,1.78759195831235,1.38869934401122,1.32502030602121,1.26426128084522,1.20628837081295,1.15097381815389,1.09819572345124,1.0478377770061,19.4007585612501,7.39497364145631,4.4967076106864,3.24481980932264,2.84473783402171,2.43767582201786,1.70295183586246,1.32527275651543,1.29378403144304,1.25272299844543,2.32364216072397,1.85706628494319,1.73357496789955,2.69365210946065,1.91576200528414,3.33490411529069,2.98718553378216,2.1856496226504,2.72839696062188,2.56459528357087,1.98328107982252,1.56627168741202,2.37186487180427,1.75419759165427,1.83397017090313,1.58627400304949,2.46861525082031,2.25831721404368,1.736094689604,1.58613654201755,1.51340398867398,5.9748772210888,5.29022791736656,4.13635727158503,3.0496317931329,2.22822279733165,1.64103335558947,1.56578349978439,1.49398423855704,1.42547734432265,1.36011184504847,3.75896646911367,15.4696558119924,6.10911812294546,4.52262764161339,3.37535295079252,2.45621403912233,1.76283275975881,1.51586166120435,1.44635157413783,1.38002888360469,1.37955929194698,1.33509450795725,1.27387352858608,1.21545984734462,1.15972473511304,3.00852423238439,2.11796646986677,1.44903079149963,1.24471077135112,1.18763435316366,1.13317518356767,1.08121324819632,1.03163403596142,0.984328286699656,0.939191750390554,0.904670762740735,0.911138748222508,0.869358330299474,0.829493760347158,0.791457186840145,0.755164786699246,0.720536580566421,0.687496256550318,0.655971002053976,3.17597349512619,3.21870074585311,2.29680005482291,3.13711260247493,2.15656784112159,1.4219712642711,1.04593745633059,1.00440793844968,4.9944642926632,3.59805291123348,2.54609751382779,1.7554414016125,1.21416989338493,1.15849393220542,1.10537100142976,1.05468403142675,4.17723678375458,4.0758670684203,2.98963879701339,9.92207537693499,4.86546560464946,3.54143625868481,2.54257755374037,1.79045244147593,1.36893675746775,1.30616393615071,1.24626957293233,1.18912167564067,1.13459430462662,1.08256729522452],"name":"Modeled","type":"scatter","mode":"lines","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["2010-08-07","2010-08-08","2010-08-09","2010-08-10","2010-08-11","2010-08-12","2010-08-13","2010-08-14","2010-08-15","2010-08-16","2010-08-17","2010-08-18","2010-08-19","2010-08-20","2010-08-21","2010-08-22","2010-08-23","2010-08-24","2010-08-25","2010-08-26","2010-08-27","2010-08-28","2010-08-29","2010-08-30","2010-08-31","2010-09-01","2010-09-02","2010-09-03","2010-09-04","2010-09-05","2010-09-06","2010-09-07","2010-09-08","2010-09-09","2010-09-10","2010-09-11","2010-09-12","2010-09-13","2010-09-14","2010-09-15","2010-09-16","2010-09-17","2010-09-18","2010-09-19","2010-09-20","2010-09-21","2010-09-22","2010-09-23","2010-09-24","2010-09-25","2010-09-26","2010-09-27","2010-09-28","2010-09-29","2010-09-30","2010-10-01","2010-10-02","2010-10-03","2010-10-04","2010-10-05","2010-10-06","2010-10-07","2010-10-08","2010-10-09","2010-10-10","2010-10-11","2010-10-12","2010-10-13","2010-10-14","2010-10-15","2010-10-16","2010-10-17","2010-10-18","2010-10-19","2010-10-20","2010-10-21","2010-10-22","2010-10-23","2010-10-24","2010-10-25","2010-10-26","2010-10-27","2010-10-28","2010-10-29","2010-10-30","2010-10-31","2010-11-01","2010-11-02","2010-11-03","2010-11-04","2010-11-05","2010-11-06","2010-11-07","2010-11-08","2010-11-09","2010-11-10","2010-11-11","2010-11-12","2010-11-13","2010-11-14","2010-11-15","2010-11-16","2010-11-17","2010-11-18","2010-11-19","2010-11-20","2010-11-21","2010-11-22","2010-11-23","2010-11-24","2010-11-25","2010-11-26","2010-11-27","2010-11-28","2010-11-29","2010-11-30","2010-12-01","2010-12-02","2010-12-03","2010-12-04","2010-12-05","2010-12-06","2010-12-07","2010-12-08","2010-12-09","2010-12-10","2010-12-11","2010-12-12","2010-12-13","2010-12-14","2010-12-15","2010-12-16","2010-12-17","2010-12-18","2010-12-19","2010-12-20","2010-12-21","2010-12-22","2010-12-23","2010-12-24","2010-12-25","2010-12-26","2010-12-27","2010-12-28","2010-12-29","2010-12-30","2010-12-31","2011-01-01","2011-01-02","2011-01-03","2011-01-04","2011-01-05","2011-01-06","2011-01-07","2011-01-08","2011-01-09","2011-01-10","2011-01-11","2011-01-12","2011-01-13","2011-01-14","2011-01-15","2011-01-16","2011-01-17","2011-01-18","2011-01-19","2011-01-20","2011-01-21","2011-01-22","2011-01-23","2011-01-24","2011-01-25","2011-01-26","2011-01-27","2011-01-28","2011-01-29","2011-01-30","2011-01-31","2011-02-01","2011-02-02","2011-02-03","2011-02-04","2011-02-05","2011-02-06","2011-02-07","2011-02-08","2011-02-09","2011-02-10","2011-02-11","2011-02-12","2011-02-13","2011-02-14","2011-02-15","2011-02-16","2011-02-17","2011-02-18","2011-02-19","2011-02-20","2011-02-21","2011-02-22","2011-02-23","2011-02-24","2011-02-25","2011-02-26","2011-02-27","2011-02-28","2011-03-01","2011-03-02","2011-03-03","2011-03-04","2011-03-05","2011-03-06","2011-03-07","2011-03-08","2011-03-09","2011-03-10","2011-03-11","2011-03-12","2011-03-13","2011-03-14","2011-03-15","2011-03-16","2011-03-17","2011-03-18","2011-03-19","2011-03-20","2011-03-21","2011-03-22","2011-03-23","2011-03-24","2011-03-25","2011-03-26","2011-03-27","2011-03-28","2011-03-29","2011-03-30","2011-03-31","2011-04-01","2011-04-02","2011-04-03","2011-04-04","2011-04-05","2011-04-06","2011-04-07","2011-04-08","2011-04-09","2011-04-10","2011-04-11","2011-04-12","2011-04-13","2011-04-14","2011-04-15","2011-04-16","2011-04-17","2011-04-18","2011-04-19","2011-04-20","2011-04-21","2011-04-22","2011-04-23","2011-04-24","2011-04-25","2011-04-26","2011-04-27","2011-04-28","2011-04-29","2011-04-30","2011-05-01","2011-05-02","2011-05-03","2011-05-04","2011-05-05","2011-05-06","2011-05-07","2011-05-08","2011-05-09","2011-05-10","2011-05-11","2011-05-12","2011-05-13","2011-05-14","2011-05-15","2011-05-16","2011-05-17","2011-05-18","2011-05-19","2011-05-20","2011-05-21","2011-05-22","2011-05-23","2011-05-24","2011-05-25","2011-05-26","2011-05-27","2011-05-28","2011-05-29","2011-05-30","2011-05-31","2011-06-01","2011-06-02","2011-06-03","2011-06-04","2011-06-05","2011-06-06","2011-06-07","2011-06-08","2011-06-09","2011-06-10","2011-06-11","2011-06-12","2011-06-13","2011-06-14","2011-06-15","2011-06-16","2011-06-17","2011-06-18","2011-06-19","2011-06-20","2011-06-21","2011-06-22","2011-06-23","2011-06-24","2011-06-25","2011-06-26","2011-06-27","2011-06-28","2011-06-29","2011-06-30","2011-07-01","2011-07-02","2011-07-03","2011-07-04","2011-07-05","2011-07-06","2011-07-07","2011-07-08","2011-07-09","2011-07-10","2011-07-11","2011-07-12","2011-07-13","2011-07-14","2011-07-15","2011-07-16","2011-07-17","2011-07-18","2011-07-19","2011-07-20","2011-07-21","2011-07-22","2011-07-23","2011-07-24","2011-07-25","2011-07-26","2011-07-27","2011-07-28","2011-07-29","2011-07-30","2011-07-31","2011-08-01","2011-08-02","2011-08-03","2011-08-04","2011-08-05","2011-08-06","2011-08-07","2011-08-08","2011-08-09","2011-08-10","2011-08-11","2011-08-12","2011-08-13","2011-08-14","2011-08-15","2011-08-16","2011-08-17","2011-08-18","2011-08-19","2011-08-20","2011-08-21","2011-08-22","2011-08-23","2011-08-24","2011-08-25","2011-08-26","2011-08-27","2011-08-28","2011-08-29","2011-08-30","2011-08-31","2011-09-01","2011-09-02","2011-09-03","2011-09-04","2011-09-05","2011-09-06","2011-09-07","2011-09-08","2011-09-09","2011-09-10","2011-09-11","2011-09-12","2011-09-13","2011-09-14","2011-09-15","2011-09-16","2011-09-17","2011-09-18","2011-09-19","2011-09-20","2011-09-21","2011-09-22","2011-09-23","2011-09-24","2011-09-25","2011-09-26","2011-09-27","2011-09-28","2011-09-29","2011-09-30","2011-10-01","2011-10-02","2011-10-03","2011-10-04","2011-10-05","2011-10-06","2011-10-07","2011-10-08","2011-10-09","2011-10-10","2011-10-11","2011-10-12","2011-10-13","2011-10-14","2011-10-15","2011-10-16","2011-10-17","2011-10-18","2011-10-19","2011-10-20","2011-10-21","2011-10-22","2011-10-23","2011-10-24","2011-10-25","2011-10-26","2011-10-27","2011-10-28","2011-10-29","2011-10-30","2011-10-31","2011-11-01","2011-11-02","2011-11-03","2011-11-04","2011-11-05","2011-11-06","2011-11-07","2011-11-08","2011-11-09","2011-11-10","2011-11-11","2011-11-12","2011-11-13","2011-11-14","2011-11-15","2011-11-16","2011-11-17","2011-11-18","2011-11-19","2011-11-20","2011-11-21","2011-11-22","2011-11-23","2011-11-24","2011-11-25","2011-11-26","2011-11-27","2011-11-28","2011-11-29","2011-11-30","2011-12-01","2011-12-02","2011-12-03","2011-12-04","2011-12-05","2011-12-06","2011-12-07","2011-12-08","2011-12-09","2011-12-10","2011-12-11","2011-12-12","2011-12-13","2011-12-14","2011-12-15","2011-12-16","2011-12-17","2011-12-18","2011-12-19","2011-12-20","2011-12-21","2011-12-22","2011-12-23","2011-12-24","2011-12-25","2011-12-26","2011-12-27","2011-12-28","2011-12-29","2011-12-30","2011-12-31","2012-01-01","2012-01-02","2012-01-03","2012-01-04","2012-01-05","2012-01-06","2012-01-07","2012-01-08","2012-01-09","2012-01-10","2012-01-11","2012-01-12","2012-01-13","2012-01-14","2012-01-15","2012-01-16","2012-01-17","2012-01-18","2012-01-19","2012-01-20","2012-01-21","2012-01-22","2012-01-23","2012-01-24","2012-01-25","2012-01-26","2012-01-27","2012-01-28","2012-01-29","2012-01-30","2012-01-31","2012-02-01","2012-02-02","2012-02-03","2012-02-04","2012-02-05","2012-02-06","2012-02-07","2012-02-08","2012-02-09","2012-02-10","2012-02-11","2012-02-12","2012-02-13","2012-02-14","2012-02-15","2012-02-16","2012-02-17","2012-02-18","2012-02-19","2012-02-20","2012-02-21","2012-02-22","2012-02-23","2012-02-24","2012-02-25","2012-02-26","2012-02-27","2012-02-28","2012-02-29","2012-03-01","2012-03-02","2012-03-03","2012-03-04","2012-03-05","2012-03-06","2012-03-07","2012-03-08","2012-03-09","2012-03-10","2012-03-11","2012-03-12","2012-03-13","2012-03-14","2012-03-15","2012-03-16","2012-03-17","2012-03-18","2012-03-19","2012-03-20","2012-03-21","2012-03-22","2012-03-23","2012-03-24","2012-03-25","2012-03-26","2012-03-27","2012-03-28","2012-03-29","2012-03-30","2012-03-31","2012-04-01","2012-04-02","2012-04-03","2012-04-04","2012-04-05","2012-04-06","2012-04-07","2012-04-08","2012-04-09","2012-04-10","2012-04-11","2012-04-12","2012-04-13","2012-04-14","2012-04-15","2012-04-16","2012-04-17","2012-04-18","2012-04-19","2012-04-20","2012-04-21","2012-04-22","2012-04-23","2012-04-24","2012-04-25","2012-04-26","2012-04-27","2012-04-28","2012-04-29","2012-04-30","2012-05-01","2012-05-02","2012-05-03","2012-05-04","2012-05-05","2012-05-06","2012-05-07","2012-05-08","2012-05-09","2012-05-10","2012-05-11","2012-05-12","2012-05-13","2012-05-14","2012-05-15","2012-05-16","2012-05-17","2012-05-18","2012-05-19","2012-05-20","2012-05-21","2012-05-22","2012-05-23","2012-05-24","2012-05-25","2012-05-26","2012-05-27","2012-05-28","2012-05-29","2012-05-30","2012-05-31","2012-06-01","2012-06-02","2012-06-03","2012-06-04","2012-06-05","2012-06-06","2012-06-07","2012-06-08","2012-06-09","2012-06-10","2012-06-11","2012-06-12","2012-06-13","2012-06-14","2012-06-15","2012-06-16","2012-06-17","2012-06-18","2012-06-19","2012-06-20","2012-06-21","2012-06-22","2012-06-23","2012-06-24","2012-06-25","2012-06-26","2012-06-27","2012-06-28","2012-06-29","2012-06-30","2012-07-01","2012-07-02","2012-07-03","2012-07-04","2012-07-05","2012-07-06","2012-07-07","2012-07-08","2012-07-09","2012-07-10","2012-07-11","2012-07-12","2012-07-13","2012-07-14","2012-07-15","2012-07-16","2012-07-17","2012-07-18","2012-07-19","2012-07-20","2012-07-21","2012-07-22","2012-07-23","2012-07-24","2012-07-25","2012-07-26","2012-07-27","2012-07-28","2012-07-29","2012-07-30","2012-07-31","2012-08-01","2012-08-02","2012-08-03","2012-08-04","2012-08-05","2012-08-06","2012-08-07","2012-08-08","2012-08-09","2012-08-10","2012-08-11","2012-08-12","2012-08-13","2012-08-14","2012-08-15","2012-08-16","2012-08-17","2012-08-18","2012-08-19","2012-08-20","2012-08-21","2012-08-22","2012-08-23","2012-08-24","2012-08-25","2012-08-26","2012-08-27","2012-08-28","2012-08-29","2012-08-30","2012-08-31","2012-09-01","2012-09-02","2012-09-03","2012-09-04","2012-09-05","2012-09-06","2012-09-07","2012-09-08","2012-09-09","2012-09-10","2012-09-11","2012-09-12","2012-09-13","2012-09-14","2012-09-15","2012-09-16","2012-09-17","2012-09-18","2012-09-19","2012-09-20","2012-09-21","2012-09-22","2012-09-23","2012-09-24","2012-09-25","2012-09-26","2012-09-27","2012-09-28","2012-09-29","2012-09-30","2012-10-01","2012-10-02","2012-10-03","2012-10-04","2012-10-05","2012-10-06","2012-10-07","2012-10-08","2012-10-09","2012-10-10","2012-10-11","2012-10-12","2012-10-13","2012-10-14","2012-10-15","2012-10-16","2012-10-17","2012-10-18","2012-10-19","2012-10-20","2012-10-21","2012-10-22","2012-10-23","2012-10-24","2012-10-25","2012-10-26","2012-10-27","2012-10-28","2012-10-29","2012-10-30","2012-10-31","2012-11-01","2012-11-02","2012-11-03","2012-11-04","2012-11-05","2012-11-06","2012-11-07","2012-11-08","2012-11-09","2012-11-10","2012-11-11","2012-11-12","2012-11-13","2012-11-14","2012-11-15","2012-11-16","2012-11-17","2012-11-18","2012-11-19","2012-11-20","2012-11-21","2012-11-22","2012-11-23","2012-11-24","2012-11-25","2012-11-26","2012-11-27","2012-11-28","2012-11-29","2012-11-30","2012-12-01","2012-12-02","2012-12-03","2012-12-04","2012-12-05","2012-12-06","2012-12-07","2012-12-08","2012-12-09","2012-12-10","2012-12-11","2012-12-12","2012-12-13","2012-12-14","2012-12-15","2012-12-16","2012-12-17","2012-12-18","2012-12-19","2012-12-20","2012-12-21","2012-12-22","2012-12-23","2012-12-24","2012-12-25","2012-12-26","2012-12-27","2012-12-28","2012-12-29","2012-12-30","2012-12-31"],"y":[0.232,0.188,0.249,0.307,0.163,0.153,0.139,0.111,0.107,0.745,0.302,0.251,0.148,0.14,0.133,0.487,0.776,0.456,1.419,1.298,0.674,0.398,0.254,0.208,0.158,0.15,0.16,0.126,0.198,0.127,0.129,0.127,0.156,0.134,0.128,0.163,0.155,0.275,0.303,0.227,0.423,1.673,0.586,0.394,0.292,0.236,0.312,0.347,0.477,0.334,0.221,0.395,5.947,5.298,26.239,41.661,12.058,5.169,3.285,2.436,2.122,2.349,2.051,1.827,1.504,1.314,1.195,1.1,1.05,15.584,7.481,4.398,3.155,2.42,2.066,2.248,2.564,2.144,2.07,2.089,4.759,10.144,6.284,4.044,3.228,2.936,2.398,2.125,1.861,3.34,11.946,6.237,4.014,5.17,4.194,3.207,2.666,2.343,1.828,1.617,1.498,1.416,10.329,6.162,3.821,2.969,2.419,2.484,3.732,3.464,2.625,2.339,1.999,1.728,1.576,1.566,17.95,22.143,7.05,4.503,3.385,2.74,2.309,1.958,1.619,1.485,1.433,9.018,30.67,11.413,5.645,3.861,3.092,2.552,2.238,1.955,1.706,1.627,1.523,1.387,1.284,1.202,1.204,1.101,1.024,0.977,1.004,2.793,5.399,3.435,2.377,1.942,1.647,1.46,1.334,1.181,1.072,1.053,1.003,0.945,0.8,0.718,0.701,0.763,0.83,0.866,0.872,0.817,0.795,0.76,0.723,0.694,0.659,0.617,0.603,0.591,0.581,0.595,0.613,0.622,0.639,0.649,0.604,0.618,0.622,0.61,0.6,0.597,0.596,0.593,0.606,0.595,0.559,0.556,0.771,1.816,1.711,1.143,0.941,0.894,0.806,0.768,0.757,0.734,0.769,0.826,0.721,0.667,0.656,0.692,0.69,20.072,35.229,9.098,5.066,3.885,9.084,9.595,5.179,3.889,3.298,3.212,3.847,13.622,10.723,6.062,4.849,3.79,3.125,2.739,2.353,2.129,2.023,1.777,1.673,1.738,1.871,1.821,1.856,2.232,2.573,3.455,3.297,3.201,4.419,7.254,16.446,54.427,33.419,18.191,16.396,10.761,6.962,27.681,11.052,7.386,7.512,6.176,5.309,4.929,10.734,9.581,30.516,11.822,9.907,8.569,5.303,3.948,3.218,2.751,4.437,4.76,3.427,2.813,2.418,2.1,1.835,1.693,1.566,1.452,1.735,9.302,9.21,5.657,5.255,11.735,6.777,8.116,6.566,7.713,7.815,4.795,3.521,3.272,2.736,2.457,1.999,1.396,1.1,0.915,0.892,0.772,0.648,0.427,0.349,0.274,0.234,0.203,0.546,1.285,1.61,3.157,1.357,0.824,0.558,1.021,0.77,0.535,0.334,0.277,1.009,3.865,4.349,2.339,1.856,1.088,0.789,0.595,0.54,0.375,0.5,0.558,0.327,0.349,0.504,0.301,0.521,0.353,0.235,0.25,0.244,0.256,0.18,0.14,0.144,0.184,0.181,0.079,0.078,0.062,0.062,0.067,0.073,0.152,0.085,0.092,0.122,0.167,0.089,0.079,0.087,0.091,0.072,0.076,0.08,0.203,0.149,0.089,0.408,0.259,0.131,0.103,0.557,3.556,6.615,1.895,0.675,0.362,0.217,1.105,8.194,1.687,0.771,0.913,1.363,0.665,70.594,18.438,5.086,2.57,1.608,1.138,0.859,0.843,3.67,8.085,8.756,11.075,4.923,2.704,1.81,1.361,0.95,0.731,2.328,1.913,1.165,0.832,0.646,0.679,0.711,1.704,3.06,4.273,2.37,1.435,0.96,0.768,5.311,11.334,19.193,22.093,13.334,6.617,4.483,3.238,2.459,1.972,1.586,1.343,1.164,1.071,1.604,11.522,14.451,6.472,4.439,3.308,2.774,3.765,2.974,2.471,2.185,1.935,1.848,1.695,1.672,1.744,1.658,1.572,1.672,2.305,2.309,1.937,1.63,1.428,1.289,1.256,1.168,1.034,1.648,2.685,1.767,1.558,1.487,2.145,1.923,2.788,2.057,1.717,1.576,1.396,1.277,1.405,1.286,1.659,3.155,4.457,5.312,3.781,21.773,6.944,4.398,3.367,2.812,2.447,4.378,9.479,4.739,3.551,2.88,2.456,2.178,2.006,3.54,6.687,5.106,3.488,2.621,2.339,2.059,2.409,4.094,3.4,2.582,2.268,2.07,3.854,19.039,6.486,4.18,3.446,3.975,7.375,4.134,2.863,2.456,2.108,1.97,1.774,1.612,1.47,1.312,2.459,1.334,1.131,1.124,1.115,1.122,1.076,0.948,0.893,0.866,0.821,1.25,8.871,3.599,2.392,3.556,3.68,2.474,1.99,1.781,1.997,2.219,1.776,1.627,1.464,1.412,1.338,1.247,1.217,1.146,1.145,1.126,1.16,1.067,0.87,0.784,0.79,0.766,0.76,0.734,0.775,0.798,0.825,0.837,0.856,0.806,0.719,0.695,0.706,0.711,0.699,0.73,0.768,0.787,0.786,1.018,3.463,7.184,3.231,2.489,4.08,12.631,12.704,7.638,6.216,12.118,19.133,16.104,11.335,7.399,5.325,4.083,3.22,3.672,3.335,2.477,2.263,2.204,2.086,3.453,1.992,1.578,1.43,1.358,1.265,1.118,1.013,1.038,1.898,2.095,1.693,1.462,1.294,1.224,1.139,1.117,1.03,0.95,0.927,0.918,1.431,4.066,19.152,9.82,5.496,3.89,6.778,3.972,3.04,2.52,6.379,5.353,4.756,8.827,5.861,4.166,3.317,27.385,18.61,12.629,7.319,4.799,3.597,2.992,13.381,11.137,8.26,5.562,3.95,2.876,2.107,1.972,1.62,1.346,1.715,1.764,1.227,1.001,15.039,12.596,4.444,2.711,20.044,17.601,7.196,4.387,3.801,4.092,3.137,3.226,2.099,1.571,1.681,13.289,5.063,3.035,2.263,1.856,1.359,1.227,0.914,0.658,0.472,0.355,0.29,2.826,2.535,1.636,1.15,0.784,0.507,1.435,0.382,0.246,0.559,0.736,0.457,0.328,0.234,0.175,0.145,0.121,0.104,0.092,0.08,0.072,0.087,0.073,0.113,0.081,0.078,0.074,0.072,0.087,0.255,0.1,0.088,0.194,0.205,0.522,0.356,0.15,0.138,0.316,0.146,0.093,0.163,0.382,0.149,0.098,2.295,28.957,11.403,5.286,2.951,1.67,1.827,1.52,0.972,0.685,0.45,0.301,0.2,0.153,0.11,0.097,0.083,0.108,0.236,1.943,0.609,0.313,0.185,0.165,0.281,0.237,0.533,3.651,1.376,0.739,1.595,2.942,1.283,0.763,0.483,0.341,0.252,0.203,0.175,0.157,18.486,20.958,4.84,2.684,1.988,2.137,1.435,1.15,1.021,0.973,1.533,2.167,1.864,3.319,2.318,4.109,4.352,3.433,2.968,2.786,2.811,2.078,2.304,2.963,2.276,1.91,2.829,2.874,2.651,2.069,1.738,7.919,13.908,6.11,4.052,2.872,2.384,2.038,1.83,1.69,1.554,1.797,17.857,18.49,7.325,4.669,3.419,2.741,2.311,1.972,1.786,1.694,1.548,1.49,1.382,1.308,2.84,2.446,1.901,1.595,1.372,1.194,1.18,1.157,1.104,1.045,1.05,1.014,0.956,0.877,0.804,0.809,0.766,0.722,0.67,1.567,5.631,2.947,4.107,2.723,2.102,1.866,1.662,6.493,7.312,3.684,2.651,2.228,1.883,1.62,1.543,3.026,4.714,2.924,7.174,8.398,4.226,2.967,2.399,2.017,1.9,1.685,1.557,1.457,1.334],"name":"Measured","type":"scatter","mode":"lines","marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"line":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="investigating-a-much-bigger-monte-carlo" class="section level2 hasAnchor" number="18.8">
+<h2><span class="header-section-number">18.8</span> Investigating a much bigger Monte Carlo<a href="modelingcalibration.html#investigating-a-much-bigger-monte-carlo" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The next couple of code chunks make plots from a Monte Carlo I ran with 100,000 parameter sets.</p>
+<p>We will look at the two plots and discuss.</p>
+<p>How much difference was there in NSE in the top 100 runs of the 100,000 run set? How much would you expect the parameters to vary between these runs? What do you think it means if they did or did not vary much?</p>
+<div class="sourceCode" id="cb313"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb313-1"><a href="modelingcalibration.html#cb313-1" aria-hidden="true" tabindex="-1"></a><span class="co">#the [,-1] drops the first column, which is just row numbers</span></span>
+<span id="cb313-2"><a href="modelingcalibration.html#cb313-2" aria-hidden="true" tabindex="-1"></a>pars100 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;HBV/parsFrom100kRun.csv&quot;</span>)[,<span class="sc">-</span><span class="dv">1</span>]</span></code></pre></div>
+<pre><code>## New names:
+## Rows: 100 Columns: 15
+## ── Column specification
+## ──────────────────────────────────────────────────────── Delimiter: &quot;,&quot; dbl
+## (15): ...1, FC, beta, LP, SFCF, TT, CFMAX, k0, k1, k2, UZL, PERC, MAXBAS...
+## ℹ Use `spec()` to retrieve the full column specification for this data. ℹ
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## • `` -&gt; `...1`</code></pre>
+<div class="sourceCode" id="cb315"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb315-1"><a href="modelingcalibration.html#cb315-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pars100, <span class="fu">aes</span>(NSE))<span class="sc">+</span></span>
+<span id="cb315-2"><a href="modelingcalibration.html#cb315-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>()</span></code></pre></div>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="Hydroinformatics_Bookdown_files/figure-html/unnamed-chunk-188-1.png" width="672" /></p>
+<p>The chunk below creates a parallel coordinate plot. Each parameter is shown, but normalized, where 1 is it’s maximum value from our random sets, and 0 is the minimum value.</p>
+<p>Each connected line is a set of parameters. The green line is the set that had the highest NSE.</p>
+<p>Look at this plot for a bit and discuss.</p>
+<p>Are there any parameters that were always in the same range for these runs? What does that tell you about them?
+Are there any parameters that look like they spanned almost the whole range for these runs? What doe sthat tell you about them?
+What does this plot tell you about the model’s representation of the real world?</p>
+<div class="sourceCode" id="cb317"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb317-1"><a href="modelingcalibration.html#cb317-1" aria-hidden="true" tabindex="-1"></a><span class="co">#filter the 100,000 run to the top ten</span></span>
+<span id="cb317-2"><a href="modelingcalibration.html#cb317-2" aria-hidden="true" tabindex="-1"></a>rankedpars <span class="ot">&lt;-</span> <span class="fu">filter</span>(pars100, ranks <span class="sc">&lt;=</span> <span class="dv">10</span>)</span>
+<span id="cb317-3"><a href="modelingcalibration.html#cb317-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb317-4"><a href="modelingcalibration.html#cb317-4" aria-hidden="true" tabindex="-1"></a><span class="co">#set the min and max values for each parameter for the plot</span></span>
+<span id="cb317-5"><a href="modelingcalibration.html#cb317-5" aria-hidden="true" tabindex="-1"></a>mins <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">40</span>, <span class="dv">1</span>, <span class="fl">0.3</span> , <span class="fl">0.4</span>, <span class="sc">-</span><span class="fl">1.5</span>, <span class="dv">1</span>, <span class="fl">0.05</span>, <span class="fl">0.01</span>, <span class="fl">0.001</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb317-6"><a href="modelingcalibration.html#cb317-6" aria-hidden="true" tabindex="-1"></a>maxs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">400</span>, <span class="dv">6</span>, <span class="dv">1</span>, <span class="fl">1.2</span>, <span class="fl">1.2</span>, <span class="dv">8</span>, <span class="fl">0.5</span>, <span class="fl">0.3</span>, <span class="fl">0.15</span>, <span class="dv">70</span> , <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb317-7"><a href="modelingcalibration.html#cb317-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb317-8"><a href="modelingcalibration.html#cb317-8" aria-hidden="true" tabindex="-1"></a><span class="co">#add maxes and mins to the parameter sets</span></span>
+<span id="cb317-9"><a href="modelingcalibration.html#cb317-9" aria-hidden="true" tabindex="-1"></a>rankedpars <span class="ot">&lt;-</span> <span class="fu">rbind</span>(rankedpars, mins, maxs)</span>
+<span id="cb317-10"><a href="modelingcalibration.html#cb317-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb317-11"><a href="modelingcalibration.html#cb317-11" aria-hidden="true" tabindex="-1"></a><span class="co">#Make NSE a character so the legend will work properly</span></span>
+<span id="cb317-12"><a href="modelingcalibration.html#cb317-12" aria-hidden="true" tabindex="-1"></a>rankedpars <span class="ot">&lt;-</span> rankedpars <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">NSE =</span> <span class="fu">as.character</span>(<span class="fu">round</span>(NSE, <span class="dv">2</span>)))</span>
+<span id="cb317-13"><a href="modelingcalibration.html#cb317-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb317-14"><a href="modelingcalibration.html#cb317-14" aria-hidden="true" tabindex="-1"></a><span class="co">#Make the NSE equal &quot;Min/Max&quot; for appropriate legend labels</span></span>
+<span id="cb317-15"><a href="modelingcalibration.html#cb317-15" aria-hidden="true" tabindex="-1"></a>rankedpars<span class="sc">$</span>NSE[rankedpars<span class="sc">$</span>NSE <span class="sc">==</span> <span class="st">&quot;0&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Min/Max&quot;</span></span>
+<span id="cb317-16"><a href="modelingcalibration.html#cb317-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb317-17"><a href="modelingcalibration.html#cb317-17" aria-hidden="true" tabindex="-1"></a><span class="co">#Make the ranks a factor datatype</span></span>
+<span id="cb317-18"><a href="modelingcalibration.html#cb317-18" aria-hidden="true" tabindex="-1"></a>rankedpars <span class="ot">&lt;-</span> rankedpars <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">ranks =</span> <span class="fu">factor</span>(ranks))</span>
+<span id="cb317-19"><a href="modelingcalibration.html#cb317-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb317-20"><a href="modelingcalibration.html#cb317-20" aria-hidden="true" tabindex="-1"></a><span class="co">#Create parallel coordinate plot</span></span>
+<span id="cb317-21"><a href="modelingcalibration.html#cb317-21" aria-hidden="true" tabindex="-1"></a>rankedpars <span class="sc">%&gt;%</span> <span class="fu">ggparcoord</span>(<span class="at">columns =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">11</span>, </span>
+<span id="cb317-22"><a href="modelingcalibration.html#cb317-22" aria-hidden="true" tabindex="-1"></a>              <span class="at">groupColumn =</span> <span class="dv">13</span>,</span>
+<span id="cb317-23"><a href="modelingcalibration.html#cb317-23" aria-hidden="true" tabindex="-1"></a>              <span class="at">showPoints =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb317-24"><a href="modelingcalibration.html#cb317-24" aria-hidden="true" tabindex="-1"></a>              <span class="at">scale =</span> <span class="st">&quot;uniminmax&quot;</span>) <span class="sc">+</span></span>
+<span id="cb317-25"><a href="modelingcalibration.html#cb317-25" aria-hidden="true" tabindex="-1"></a>              <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb317-26"><a href="modelingcalibration.html#cb317-26" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ggtitle</span>(<span class="st">&quot;Top 10 parameter sets from 100,000 run Monte Carlo&quot;</span>)<span class="sc">+</span></span>
+<span id="cb317-27"><a href="modelingcalibration.html#cb317-27" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ylab</span>(<span class="st">&quot;normalized parameter values&quot;</span>)<span class="sc">+</span></span>
+<span id="cb317-28"><a href="modelingcalibration.html#cb317-28" aria-hidden="true" tabindex="-1"></a>              <span class="fu">xlab</span>(<span class="st">&quot;parameters&quot;</span>)</span></code></pre></div>
+<p><img src="Hydroinformatics_Bookdown_files/figure-html/unnamed-chunk-189-1.png" width="672" /></p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="modelingintro.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["Hydroinformatics_Bookdown.pdf", "Hydroinformatics_Bookdown.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
