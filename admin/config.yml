@@ -1,5 +1,6 @@
 backend:
   name: git-gateway
+  repo: abnerbog/VT-Hydroinformatics.github.io
   branch: master # Branch to update (master by default)
 
 media_folder: "media" # Folder where user uploaded files should go
